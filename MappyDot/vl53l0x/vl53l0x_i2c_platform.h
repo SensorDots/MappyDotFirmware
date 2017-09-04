@@ -32,7 +32,6 @@ extern "C" {
 #include <stdint.h>
 #include <stdarg.h>
 
-
 /**
  *  @brief Typedef defining .\n
  * The developer shoud modify this to suit the platform being deployed.
@@ -47,21 +46,6 @@ extern "C" {
  *
  */
 
-#ifndef bool_t
-typedef unsigned char bool_t;
-#endif
-
-
-#define	   I2C                0x01
-#define	   SPI                0x00
-
-#define    COMMS_BUFFER_SIZE    64  // MUST be the same size as the SV task buffer
-
-#define    BYTES_PER_WORD        2
-#define    BYTES_PER_DWORD       4
-
-#define    VL53L0X_MAX_STRING_LENGTH_PLT       256
-
 /**
  * @brief  Initialise platform comms.
  *
@@ -71,18 +55,7 @@ typedef unsigned char bool_t;
  * @return status - status 0 = ok, 1 = error
  *
  */
-
-int32_t VL53L0X_comms_initialise(uint8_t  comms_type,
-                                          uint16_t comms_speed_khz);
-
-/**
- * @brief  Close platform comms.
- *
- * @return status - status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_comms_close(void);
+ int VL53L0X_i2c_init(void);
 
 /**
  * @brief  Cycle Power to Device
@@ -91,7 +64,7 @@ int32_t VL53L0X_comms_close(void);
  *
  */
 
-int32_t VL53L0X_cycle_power(void);
+int VL53L0X_cycle_power(void);
 
 
 /**
@@ -118,7 +91,7 @@ int32_t VL53L0X_cycle_power(void);
  *
  */
 
-int32_t VL53L0X_write_multi(uint8_t address, uint8_t index, uint8_t  *pdata, int32_t count);
+int VL53L0X_write_multi(uint8_t address, uint8_t index, uint8_t *pdata, uint32_t count);
 
 
 /**
@@ -144,8 +117,7 @@ int32_t VL53L0X_write_multi(uint8_t address, uint8_t index, uint8_t  *pdata, int
  * @return status - SystemVerilog status 0 = ok, 1 = error
  *
  */
-
-int32_t VL53L0X_read_multi(uint8_t address,  uint8_t index, uint8_t  *pdata, int32_t count);
+int VL53L0X_read_multi(uint8_t address,  uint8_t index, uint8_t  *pdata, uint32_t count);
 
 
 /**
@@ -171,7 +143,7 @@ int32_t VL53L0X_read_multi(uint8_t address,  uint8_t index, uint8_t  *pdata, int
  *
  */
 
-int32_t VL53L0X_write_byte(uint8_t address,  uint8_t index, uint8_t   data);
+int VL53L0X_write_byte(uint8_t address,  uint8_t index, uint8_t   data);
 
 
 /**
@@ -198,7 +170,7 @@ int32_t VL53L0X_write_byte(uint8_t address,  uint8_t index, uint8_t   data);
  *
  */
 
-int32_t VL53L0X_write_word(uint8_t address,  uint8_t index, uint16_t  data);
+int VL53L0X_write_word(uint8_t address,  uint8_t index, uint16_t  data);
 
 
 /**
@@ -225,7 +197,7 @@ int32_t VL53L0X_write_word(uint8_t address,  uint8_t index, uint16_t  data);
  *
  */
 
-int32_t VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t  data);
+int VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t  data);
 
 
 
@@ -252,7 +224,7 @@ int32_t VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t  data);
  *
  */
 
-int32_t VL53L0X_read_byte(uint8_t address,  uint8_t index, uint8_t  *pdata);
+int VL53L0X_read_byte(uint8_t address,  uint8_t index, uint8_t  *pdata);
 
 
 /**
@@ -279,7 +251,7 @@ int32_t VL53L0X_read_byte(uint8_t address,  uint8_t index, uint8_t  *pdata);
  *
  */
 
-int32_t VL53L0X_read_word(uint8_t address,  uint8_t index, uint16_t *pdata);
+int VL53L0X_read_word(uint8_t address,  uint8_t index, uint16_t *pdata);
 
 
 /**
@@ -306,7 +278,7 @@ int32_t VL53L0X_read_word(uint8_t address,  uint8_t index, uint16_t *pdata);
  *
  */
 
-int32_t VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *pdata);
+int VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *pdata);
 
 
 /**
@@ -320,7 +292,7 @@ int32_t VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *pdata);
  *
  */
 
-int32_t VL53L0X_platform_wait_us(int32_t wait_us);
+int VL53L0X_platform_wait_us(int32_t wait_us);
 
 
 /**
@@ -334,7 +306,7 @@ int32_t VL53L0X_platform_wait_us(int32_t wait_us);
  *
  */
 
-int32_t VL53L0X_wait_ms(int32_t wait_ms);
+int VL53L0X_wait_ms(int32_t wait_ms);
 
 
 /**
@@ -346,7 +318,7 @@ int32_t VL53L0X_wait_ms(int32_t wait_ms);
  *
  */
 
-int32_t VL53L0X_set_gpio(uint8_t  level);
+int VL53L0X_set_gpio(uint8_t  level);
 
 
 /**
@@ -358,7 +330,7 @@ int32_t VL53L0X_set_gpio(uint8_t  level);
  *
  */
 
-int32_t VL53L0X_get_gpio(uint8_t *plevel);
+int VL53L0X_get_gpio(uint8_t *plevel);
 
 /**
  * @brief Release force on GPIO
@@ -367,7 +339,7 @@ int32_t VL53L0X_get_gpio(uint8_t *plevel);
  *
  */
 
-int32_t VL53L0X_release_gpio(void);
+int VL53L0X_release_gpio(void);
 
 
 /**
@@ -379,7 +351,7 @@ int32_t VL53L0X_release_gpio(void);
 *
 */
 
-int32_t VL53L0X_get_timer_frequency(int32_t *ptimer_freq_hz);
+int VL53L0X_get_timer_frequency(int32_t *ptimer_freq_hz);
 
 /**
 * @brief Get the timer value in units of timer_freq_hz (see VL53L0X_get_timestamp_frequency())
@@ -390,7 +362,7 @@ int32_t VL53L0X_get_timer_frequency(int32_t *ptimer_freq_hz);
 *
 */
 
-int32_t VL53L0X_get_timer_value(int32_t *ptimer_count);
+int VL53L0X_get_timer_value(int32_t *ptimer_count);
 
 
 

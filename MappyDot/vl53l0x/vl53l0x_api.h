@@ -67,7 +67,7 @@ extern "C"
  * @return  VL53L0X_ERROR_NONE     Success
  * @return  "Other error code"    See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_GetVersion(VL53L0X_Version_t *pVersion);
+//VL53L0X_API VL53L0X_Error VL53L0X_GetVersion(VL53L0X_Version_t *pVersion);
 
 /**
  * @brief Return the PAL Specification Version used for the current
@@ -79,8 +79,8 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetVersion(VL53L0X_Version_t *pVersion);
  * @return  VL53L0X_ERROR_NONE        Success
  * @return  "Other error code"    See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_GetPalSpecVersion(
-	VL53L0X_Version_t *pPalSpecVersion);
+//VL53L0X_API VL53L0X_Error VL53L0X_GetPalSpecVersion(
+//	VL53L0X_Version_t *pPalSpecVersion);
 
 /**
  * @brief Reads the Product Revision for a for given Device
@@ -110,8 +110,8 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetProductRevision(VL53L0X_DEV Dev,
  * @return  VL53L0X_ERROR_NONE   Success
  * @return  "Other error code"  See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_GetDeviceInfo(VL53L0X_DEV Dev,
-	VL53L0X_DeviceInfo_t *pVL53L0X_DeviceInfo);
+//VL53L0X_API VL53L0X_Error VL53L0X_GetDeviceInfo(VL53L0X_DEV Dev,
+//	VL53L0X_DeviceInfo_t *pVL53L0X_DeviceInfo);
 
 /**
  * @brief Read current status of the error register for the selected device
@@ -452,10 +452,12 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetTuningSettingBuffer(VL53L0X_DEV Dev,
  * @note This function Access to the device
  *
  * @param   Dev                   Device Handle
+ * @param   alt_spad_init         Use alternate SPAD init function
  * @return  VL53L0X_ERROR_NONE     Success
  * @return  "Other error code"    See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev);
+VL53L0X_API VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev, uint8_t alt_spad_init);
+
 
 /**
  * @brief Wait for device booted after chip enable (hardware standby)

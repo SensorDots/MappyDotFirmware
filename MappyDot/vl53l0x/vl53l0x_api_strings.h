@@ -37,8 +37,8 @@ extern "C" {
 #endif
 
 
-VL53L0X_Error VL53L0X_get_device_info(VL53L0X_DEV Dev,
-			VL53L0X_DeviceInfo_t *pVL53L0X_DeviceInfo);
+//VL53L0X_Error VL53L0X_get_device_info(VL53L0X_DEV Dev,
+//			VL53L0X_DeviceInfo_t *pVL53L0X_DeviceInfo);
 
 VL53L0X_Error VL53L0X_get_device_error_string(VL53L0X_DeviceError ErrorCode,
 		char *pDeviceErrorString);
@@ -59,6 +59,8 @@ VL53L0X_Error VL53L0X_get_sequence_steps_info(
 VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckId,
 	char *pLimitCheckString);
 
+
+#define USE_EMPTY_STRING
 
 #ifdef USE_EMPTY_STRING
 	#define  VL53L0X_STRING_DEVICE_INFO_NAME                             ""
@@ -86,6 +88,8 @@ VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckI
 	#define  VL53L0X_STRING_ERROR_DIVISION_BY_ZERO                       ""
 	#define  VL53L0X_STRING_ERROR_REF_SPAD_INIT                          ""
 	#define  VL53L0X_STRING_ERROR_NOT_IMPLEMENTED                        ""
+	#define  VL53L0X_STRING_ERROR_INTERRUPT_NOT_CLEARED                  ""
+
 
 	#define  VL53L0X_STRING_UNKNOW_ERROR_CODE                            ""
 
@@ -134,6 +138,8 @@ VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckI
 	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE          ""
 	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_REF_CLIP                  ""
 	#define  VL53L0X_STRING_CHECKENABLE_RANGE_IGNORE_THRESHOLD           ""
+	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_MSRC                 ""
+	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_PRE_RANGE            ""
 
 	/* Sequence Step */
 	#define  VL53L0X_STRING_SEQUENCESTEP_TCC                             ""
@@ -141,6 +147,8 @@ VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckI
 	#define  VL53L0X_STRING_SEQUENCESTEP_MSRC                            ""
 	#define  VL53L0X_STRING_SEQUENCESTEP_PRE_RANGE                       ""
 	#define  VL53L0X_STRING_SEQUENCESTEP_FINAL_RANGE                     ""
+
+
 #else
 	#define  VL53L0X_STRING_DEVICE_INFO_NAME          "VL53L0X cut1.0"
 	#define  VL53L0X_STRING_DEVICE_INFO_NAME_TS0      "VL53L0X TS0"

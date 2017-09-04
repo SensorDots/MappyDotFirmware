@@ -49,42 +49,42 @@ extern "C" {
 
 
 /** PAL SPECIFICATION major version */
-#define VL53L0X10_SPECIFICATION_VER_MAJOR   1
+//#define VL53L0X10_SPECIFICATION_VER_MAJOR   1
 /** PAL SPECIFICATION minor version */
-#define VL53L0X10_SPECIFICATION_VER_MINOR   2
+//#define VL53L0X10_SPECIFICATION_VER_MINOR   2
 /** PAL SPECIFICATION sub version */
-#define VL53L0X10_SPECIFICATION_VER_SUB	   7
+//#define VL53L0X10_SPECIFICATION_VER_SUB	   7
 /** PAL SPECIFICATION sub version */
-#define VL53L0X10_SPECIFICATION_VER_REVISION 1440
+//#define VL53L0X10_SPECIFICATION_VER_REVISION 1440
 
 /** VL53L0X PAL IMPLEMENTATION major version */
-#define VL53L0X10_IMPLEMENTATION_VER_MAJOR	1
+//#define VL53L0X10_IMPLEMENTATION_VER_MAJOR	1
 /** VL53L0X PAL IMPLEMENTATION minor version */
-#define VL53L0X10_IMPLEMENTATION_VER_MINOR	0
+//#define VL53L0X10_IMPLEMENTATION_VER_MINOR	0
 /** VL53L0X PAL IMPLEMENTATION sub version */
-#define VL53L0X10_IMPLEMENTATION_VER_SUB		9
+//#define VL53L0X10_IMPLEMENTATION_VER_SUB		9
 /** VL53L0X PAL IMPLEMENTATION sub version */
-#define VL53L0X10_IMPLEMENTATION_VER_REVISION	3673
+//#define VL53L0X10_IMPLEMENTATION_VER_REVISION	3673
 
 /** PAL SPECIFICATION major version */
-#define VL53L0X_SPECIFICATION_VER_MAJOR	 1
+//#define VL53L0X_SPECIFICATION_VER_MAJOR	 1
 /** PAL SPECIFICATION minor version */
-#define VL53L0X_SPECIFICATION_VER_MINOR	 2
+//#define VL53L0X_SPECIFICATION_VER_MINOR	 2
 /** PAL SPECIFICATION sub version */
-#define VL53L0X_SPECIFICATION_VER_SUB	 7
+//#define VL53L0X_SPECIFICATION_VER_SUB	 7
 /** PAL SPECIFICATION sub version */
-#define VL53L0X_SPECIFICATION_VER_REVISION 1440
+//#define VL53L0X_SPECIFICATION_VER_REVISION 1440
 
 /** VL53L0X PAL IMPLEMENTATION major version */
-#define VL53L0X_IMPLEMENTATION_VER_MAJOR	  1
+//#define VL53L0X_IMPLEMENTATION_VER_MAJOR	  1
 /** VL53L0X PAL IMPLEMENTATION minor version */
-#define VL53L0X_IMPLEMENTATION_VER_MINOR	  0
+//#define VL53L0X_IMPLEMENTATION_VER_MINOR	  0
 /** VL53L0X PAL IMPLEMENTATION sub version */
-#define VL53L0X_IMPLEMENTATION_VER_SUB	  2
+//#define VL53L0X_IMPLEMENTATION_VER_SUB	  2
 /** VL53L0X PAL IMPLEMENTATION sub version */
-#define VL53L0X_IMPLEMENTATION_VER_REVISION	  4823
-#define VL53L0X_DEFAULT_MAX_LOOP 2000
-#define VL53L0X_MAX_STRING_LENGTH 32
+//#define VL53L0X_IMPLEMENTATION_VER_REVISION	  4823
+#define VL53L0X_DEFAULT_MAX_LOOP 200
+#define VL53L0X_MAX_STRING_LENGTH 16
 
 
 #include "vl53l0x_device.h"
@@ -97,30 +97,30 @@ extern "C" {
 
 /** @brief Defines the parameters of the Get Version Functions
  */
-typedef struct {
-	uint32_t	 revision; /*!< revision number */
-	uint8_t		 major;	   /*!< major number */
-	uint8_t		 minor;	   /*!< minor number */
-	uint8_t		 build;	   /*!< build number */
-} VL53L0X_Version_t;
+//typedef struct {
+	//uint32_t	 revision; /*!< revision number */
+	//uint8_t		 major;	   /*!< major number */
+	//uint8_t		 minor;	   /*!< minor number */
+	//uint8_t		 build;	   /*!< build number */
+//} VL53L0X_Version_t;
 
 
 /** @brief Defines the parameters of the Get Device Info Functions
  */
-typedef struct {
-	char Name[VL53L0X_MAX_STRING_LENGTH];
-		/*!< Name of the Device e.g. Left_Distance */
-	char Type[VL53L0X_MAX_STRING_LENGTH];
-		/*!< Type of the Device e.g VL53L0X */
-	char ProductId[VL53L0X_MAX_STRING_LENGTH];
-		/*!< Product Identifier String	*/
-	uint8_t ProductType;
-		/*!< Product Type, VL53L0X = 1, VL53L1 = 2 */
-	uint8_t ProductRevisionMajor;
-		/*!< Product revision major */
-	uint8_t ProductRevisionMinor;
-		/*!< Product revision minor */
-} VL53L0X_DeviceInfo_t;
+//typedef struct {
+	//char Name[VL53L0X_MAX_STRING_LENGTH];
+		///*!< Name of the Device e.g. Left_Distance */
+	//char Type[VL53L0X_MAX_STRING_LENGTH];
+		///*!< Type of the Device e.g VL53L0X */
+	//char ProductId[VL53L0X_MAX_STRING_LENGTH];
+		///*!< Product Identifier String	*/
+	//uint8_t ProductType;
+		///*!< Product Type, VL53L0X = 1, VL53L1 = 2 */
+	//uint8_t ProductRevisionMajor;
+		///*!< Product revision major */
+	//uint8_t ProductRevisionMinor;
+		///*!< Product revision minor */
+//} VL53L0X_DeviceInfo_t;
 
 
 /** @defgroup VL53L0X_define_Error_group Error and Warning code returned by API
@@ -234,7 +234,7 @@ typedef uint8_t VL53L0X_PowerModes;
 typedef struct {
 	VL53L0X_DeviceModes DeviceMode;
 	/*!< Defines type of measurement to be done for the next measure */
-	VL53L0X_HistogramModes HistogramMode;
+	//VL53L0X_HistogramModes HistogramMode;
 	/*!< Defines type of histogram measurement to be done for the next
 	 *	measure */
 	uint32_t MeasurementTimingBudgetMicroSeconds;
@@ -304,8 +304,8 @@ typedef struct {
  * @brief Range measurement data.
  */
 typedef struct {
-	uint32_t TimeStamp;		/*!< 32-bit time stamp. */
-	uint32_t MeasurementTimeUsec;
+	//uint32_t TimeStamp;		/*!< 32-bit time stamp. */
+	//uint32_t MeasurementTimeUsec;
 		/*!< Give the Measurement time needed by the device to do the
 		 * measurement.*/
 
@@ -325,15 +325,16 @@ typedef struct {
 		/*!< Return ambient rate (MCPS)\n these is a 16.16 fix point
 		 *	value, which is effectively a measure of the ambien
 		 *	t light.*/
+    FixPoint1616_t Sigma;
 
 	uint16_t EffectiveSpadRtnCount;
 		/*!< Return the effective SPAD count for the return signal.
 		 *	To obtain Real value it should be divided by 256 */
 
-	uint8_t ZoneId;
+	//uint8_t ZoneId;
 		/*!< Denotes which zone and range scheduler stage the range
 		 *	data relates to. */
-	uint8_t RangeFractionalPart;
+	//uint8_t RangeFractionalPart;
 		/*!< Fractional part of range distance. Final value is a
 		 *	FixPoint168 value. */
 	uint8_t RangeStatus;
@@ -408,15 +409,15 @@ typedef struct {
 
 	uint8_t ReadDataFromDeviceDone; /* Indicate if read from device has
 	been done (==1) or not (==0) */
-	uint8_t ModuleId; /* Module ID */
-	uint8_t Revision; /* test Revision */
-	char ProductId[VL53L0X_MAX_STRING_LENGTH];
+	//uint8_t ModuleId; /* Module ID */
+	//uint8_t Revision; /* test Revision */
+	//char ProductId[VL53L0X_MAX_STRING_LENGTH];
 		/* Product Identifier String  */
 	uint8_t ReferenceSpadCount; /* used for ref spad management */
 	uint8_t ReferenceSpadType;	/* used for ref spad management */
 	uint8_t RefSpadsInitialised; /* reports if ref spads are initialised. */
-	uint32_t PartUIDUpper; /*!< Unique Part ID Upper */
-	uint32_t PartUIDLower; /*!< Unique Part ID Lower */
+	//uint32_t PartUIDUpper; /*!< Unique Part ID Upper */
+	//uint32_t PartUIDLower; /*!< Unique Part ID Lower */
 	FixPoint1616_t SignalRateMeasFixed400mm; /*!< Peek Signal rate
 	at 400 mm*/
 
@@ -431,7 +432,7 @@ typedef struct {
  * These must never access directly but only via macro
  */
 typedef struct {
-	VL53L0X_DMaxData_t DMaxData;
+	//VL53L0X_DMaxData_t DMaxData;
 	/*!< Dmax Data */
 	int32_t	 Part2PartOffsetNVMMicroMeter;
 	/*!< backed up NVM value */
@@ -441,7 +442,7 @@ typedef struct {
 	/*!< Current Device Parameter */
 	VL53L0X_RangingMeasurementData_t LastRangeMeasure;
 	/*!< Ranging Data */
-	VL53L0X_HistogramMeasurementData_t LastHistogramMeasure;
+	//VL53L0X_HistogramMeasurementData_t LastHistogramMeasure;
 	/*!< Histogram Data */
 	VL53L0X_DeviceSpecificParameters_t DeviceSpecificParameters;
 	/*!< Parameters specific to the device */
@@ -449,7 +450,7 @@ typedef struct {
 	/*!< Spad Data */
 	uint8_t SequenceConfig;
 	/*!< Internal value for the sequence config */
-	uint8_t RangeFractionalEnable;
+	//uint8_t RangeFractionalEnable;
 	/*!< Enable/Disable fractional part of ranging data */
 	VL53L0X_State PalState;
 	/*!< Current state of the PAL for this device */

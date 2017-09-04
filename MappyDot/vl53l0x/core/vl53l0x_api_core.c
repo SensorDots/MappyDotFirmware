@@ -34,12 +34,16 @@
 #ifndef __KERNEL__
 #include <stdlib.h>
 #endif
-#define LOG_FUNCTION_START(fmt, ...) \
+/*#define LOG_FUNCTION_START(fmt, ...) \
 	_LOG_FUNCTION_START(TRACE_MODULE_API, fmt, ##__VA_ARGS__)
 #define LOG_FUNCTION_END(status, ...) \
 	_LOG_FUNCTION_END(TRACE_MODULE_API, status, ##__VA_ARGS__)
 #define LOG_FUNCTION_END_FMT(status, fmt, ...) \
-	_LOG_FUNCTION_END_FMT(TRACE_MODULE_API, status, fmt, ##__VA_ARGS__)
+	_LOG_FUNCTION_END_FMT(TRACE_MODULE_API, status, fmt, ##__VA_ARGS__)*/
+
+#define LOG_FUNCTION_START(fmt, ...) 
+#define LOG_FUNCTION_END(status, ...) 
+#define LOG_FUNCTION_END_FMT(status, fmt, ...) 
 
 VL53L0X_Error VL53L0X_reverse_bytes(uint8_t *data, uint32_t size)
 {
@@ -129,7 +133,7 @@ uint32_t VL53L0X_isqrt(uint32_t num)
 	 */
 
 	uint32_t  res = 0;
-	uint32_t  bit = 1 << 30;
+	uint32_t  bit = (uint32_t)1 << 30;
 	/* The second-to-top bit is set:
 	 *	1 << 14 for 16-bits, 1 << 30 for 32 bits */
 
@@ -214,19 +218,19 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	uint8_t byte;
 	uint32_t TmpDWord;
-	uint8_t ModuleId;
-	uint8_t Revision;
+	//uint8_t ModuleId;
+	//uint8_t Revision;
 	uint8_t ReferenceSpadCount = 0;
 	uint8_t ReferenceSpadType = 0;
-	uint32_t PartUIDUpper = 0;
-	uint32_t PartUIDLower = 0;
+	//uint32_t PartUIDUpper = 0;
+	//uint32_t PartUIDLower = 0;
 	uint32_t OffsetFixed1104_mm = 0;
 	int16_t OffsetMicroMeters = 0;
 	uint32_t DistMeasTgtFixed1104_mm = 400 << 4;
 	uint32_t DistMeasFixed1104_400_mm = 0;
 	uint32_t SignalRateMeasFixed1104_400_mm = 0;
-	char ProductId[19];
-	char *ProductId_tmp;
+	//char ProductId[19];
+	//char *ProductId_tmp;
 	uint8_t ReadDataFromDeviceDone;
 	FixPoint1616_t SignalRateMeasFixed400mmFix = 0;
 	uint8_t NvmRefGoodSpadMap[VL53L0X_REF_SPAD_BUFFER_SIZE];
@@ -288,7 +292,7 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 				& 0xff);
 		}
 
-		if (((option & 2) == 2) &&
+		/*if (((option & 2) == 2) &&
 			((ReadDataFromDeviceDone & 2) == 0)) {
 
 			Status |= VL53L0X_WrByte(Dev, 0x94, 0x02);
@@ -351,18 +355,18 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 			ProductId[17] = (char)((TmpDWord >> 2) & 0x07f);
 			ProductId[18] = '\0';
 
-		}
+		}*/
 
 		if (((option & 4) == 4) &&
 			((ReadDataFromDeviceDone & 4) == 0)) {
 
-			Status |= VL53L0X_WrByte(Dev, 0x94, 0x7B);
-			Status |= VL53L0X_device_read_strobe(Dev);
-			Status |= VL53L0X_RdDWord(Dev, 0x90, &PartUIDUpper);
+			//Status |= VL53L0X_WrByte(Dev, 0x94, 0x7B);
+			//Status |= VL53L0X_device_read_strobe(Dev);
+			//Status |= VL53L0X_RdDWord(Dev, 0x90, &PartUIDUpper);
 
-			Status |= VL53L0X_WrByte(Dev, 0x94, 0x7C);
-			Status |= VL53L0X_device_read_strobe(Dev);
-			Status |= VL53L0X_RdDWord(Dev, 0x90, &PartUIDLower);
+			//Status |= VL53L0X_WrByte(Dev, 0x94, 0x7C);
+			//Status |= VL53L0X_device_read_strobe(Dev);
+			//Status |= VL53L0X_RdDWord(Dev, 0x90, &PartUIDLower);
 
 			Status |= VL53L0X_WrByte(Dev, 0x94, 0x73);
 			Status |= VL53L0X_device_read_strobe(Dev);
@@ -421,7 +425,7 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 			}
 		}
 
-		if (((option & 2) == 2) &&
+		/*if (((option & 2) == 2) &&
 			((ReadDataFromDeviceDone & 2) == 0)) {
 			VL53L0X_SETDEVICESPECIFICPARAMETER(Dev,
 					ModuleId, ModuleId);
@@ -433,15 +437,15 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 					ProductId);
 			VL53L0X_COPYSTRING(ProductId_tmp, ProductId);
 
-		}
+		}*/
 
 		if (((option & 4) == 4) &&
 			((ReadDataFromDeviceDone & 4) == 0)) {
-			VL53L0X_SETDEVICESPECIFICPARAMETER(Dev,
-						PartUIDUpper, PartUIDUpper);
+			//VL53L0X_SETDEVICESPECIFICPARAMETER(Dev,
+			//			PartUIDUpper, PartUIDUpper);
 
-			VL53L0X_SETDEVICESPECIFICPARAMETER(Dev,
-						PartUIDLower, PartUIDLower);
+			//VL53L0X_SETDEVICESPECIFICPARAMETER(Dev,
+			//			PartUIDLower, PartUIDLower);
 
 			SignalRateMeasFixed400mmFix =
 				VL53L0X_FIXPOINT97TOFIXPOINT1616(
@@ -1872,13 +1876,14 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 		diff1_mcps <<= 8;
 
 		/* FixPoint0824/FixPoint1616 = FixPoint2408 */
-		xTalkCorrection	 = abs(diff1_mcps/diff2_mcps);
+		//xTalkCorrection	 = abs(diff1_mcps/diff2_mcps);
+		xTalkCorrection	 = diff1_mcps/diff2_mcps;
 
 		/* FixPoint2408 << 8 = FixPoint1616 */
 		xTalkCorrection <<= 8;
 
 		if(pRangingMeasurementData->RangeStatus != 0){
-			pwMult = 1 << 16;
+			pwMult = (uint32_t)1 << 16;
 		} else {
 			/* FixPoint1616/uint32 = FixPoint1616 */
 			pwMult = deltaT_ps/cVcselPulseWidth_ps; /* smaller than 1.0f */
@@ -1888,13 +1893,13 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 			 * values are small enough such that32 bits will not be
 			 * exceeded.
 			 */
-			pwMult *= ((1 << 16) - xTalkCorrection);
+			pwMult *= (((uint32_t)1 << 16) - xTalkCorrection);
 
 			/* (FixPoint3232 >> 16) = FixPoint1616 */
 			pwMult =  (pwMult + c16BitRoundingParam) >> 16;
 
 			/* FixPoint1616 + FixPoint1616 = FixPoint1616 */
-			pwMult += (1 << 16);
+			pwMult += ((uint32_t)1 << 16);
 
 			/*
 			 * At this point the value will be 1.xx, therefore if we square

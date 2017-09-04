@@ -1,7 +1,7 @@
 /**
    MappyDot Firmware vl53l0x.c
 
-   Copyright (C) 2017  Blair Wyatt
+   Copyright (C) 2017 SensorDots.org
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

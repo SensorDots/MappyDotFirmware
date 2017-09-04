@@ -29,17 +29,22 @@
 #include "vl53l0x_api.h"
 #include "vl53l0x_api_core.h"
 #include "vl53l0x_api_calibration.h"
+#include <string.h>
 
 #ifndef __KERNEL__
 #include <stdlib.h>
 #endif
 
-#define LOG_FUNCTION_START(fmt, ...) \
+/*#define LOG_FUNCTION_START(fmt, ...) \
 	_LOG_FUNCTION_START(TRACE_MODULE_API, fmt, ##__VA_ARGS__)
 #define LOG_FUNCTION_END(status, ...) \
 	_LOG_FUNCTION_END(TRACE_MODULE_API, status, ##__VA_ARGS__)
 #define LOG_FUNCTION_END_FMT(status, fmt, ...) \
-	_LOG_FUNCTION_END_FMT(TRACE_MODULE_API, status, fmt, ##__VA_ARGS__)
+	_LOG_FUNCTION_END_FMT(TRACE_MODULE_API, status, fmt, ##__VA_ARGS__)*/
+
+#define LOG_FUNCTION_START(fmt, ...)
+#define LOG_FUNCTION_END(status, ...)
+#define LOG_FUNCTION_END_FMT(status, fmt, ...)
 
 #define REF_ARRAY_SPAD_0  0
 #define REF_ARRAY_SPAD_5  5
@@ -117,9 +122,9 @@ VL53L0X_Error VL53L0X_perform_xtalk_calibration(VL53L0X_DEV Dev,
 		/* FixPoint1616_t / uint16_t = FixPoint1616_t */
 		xTalkStoredMeanSignalRate = sum_signalRate / total_count;
 		xTalkStoredMeanRange = (FixPoint1616_t)((uint32_t)(
-			sum_ranging << 16) / total_count);
+			(uint32_t)sum_ranging << 16) / total_count);
 		xTalkStoredMeanRtnSpads = (FixPoint1616_t)((uint32_t)(
-			sum_spads << 16) / total_count);
+			(uint32_t)sum_spads << 16) / total_count);
 
 		/* Round Mean Spads to Whole Number.
 		 * Typically the calculated mean SPAD count is a whole number
@@ -163,7 +168,7 @@ VL53L0X_Error VL53L0X_perform_xtalk_calibration(VL53L0X_DEV Dev,
 			 * Fixed1616 * (Fixed1616 - Fixed1616/int) :=
 			 * (2^16 * Fixed1616)
 			 */
-			signalXTalkTotalPerSpad *= ((1 << 16) -
+			signalXTalkTotalPerSpad *= (((uint32_t)1 << 16) -
 				(xTalkStoredMeanRange / xTalkCalDistanceAsInt));
 
 			/* Round from 2^16 * Fixed1616, to Fixed1616. */
@@ -252,7 +257,7 @@ VL53L0X_Error VL53L0X_perform_offset_calibration(VL53L0X_DEV Dev,
 
 	if (Status == VL53L0X_ERROR_NONE) {
 		/* FixPoint1616_t / uint16_t = FixPoint1616_t */
-		StoredMeanRange = (FixPoint1616_t)((uint32_t)(sum_ranging << 16)
+		StoredMeanRange = (FixPoint1616_t)((uint32_t)((uint32_t)sum_ranging << 16)
 			/ total_count);
 
 		StoredMeanRangeAsInt = (StoredMeanRange + 0x8000) >> 16;
@@ -569,7 +574,7 @@ VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
 	int32_t nextGoodSpad = offset;
 	uint32_t currentSpad;
 	uint8_t checkSpadArray[6];
-
+	
 	/*
 	 * This function takes in a spad array which may or may not have SPADS
 	 * already enabled and appends from a given offset a requested number
@@ -586,7 +591,9 @@ VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
 			&nextGoodSpad);
 
 		if (nextGoodSpad == -1) {
-			status = VL53L0X_ERROR_REF_SPAD_INIT;
+		    /* Don't return an error, just use the SPADs we have available
+			   otherwise init will just always fail, even calibration. */
+			//status = VL53L0X_ERROR_REF_SPAD_INIT;
 			break;
 		}
 
@@ -596,12 +603,16 @@ VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
 			 * spads from the current quadrant then this is an error
 			 */
 			status = VL53L0X_ERROR_REF_SPAD_INIT;
+
 			break;
 		}
 		currentSpad = (uint32_t)nextGoodSpad;
 		enable_spad_bit(spadArray, size, currentSpad);
 		currentSpad++;
 	}
+	//Some SPADs may fail. This just reduces the accuracy of the system, but it shouldn't affect initialisation.
+	//TODO add number of working SPADs. Sometimes this could just be due to calibration.
+	//status = VL53L0X_ERROR_NONE;
 	*lastSpad = currentSpad;
 
 	if (status == VL53L0X_ERROR_NONE)
@@ -843,10 +854,9 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 		isApertureSpads_int = needAptSpads;
 		refSpadCount_int	= minimumSpadCount;
 
-		memcpy(lastSpadArray, Dev->Data.SpadData.RefSpadEnables,
-				spadArraySize);
-		lastSignalRateDiff = abs(peakSignalRateRef -
-			targetRefRate);
+		memcpy(lastSpadArray, Dev->Data.SpadData.RefSpadEnables, spadArraySize);
+		lastSignalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
+		//lastSignalRateDiff = abs(peakSignalRateRef - targetRefRate);
 		complete = 0;
 
 		while (!complete) {
@@ -896,7 +906,8 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 			if (Status != VL53L0X_ERROR_NONE)
 				break;
 
-			signalRateDiff = abs(peakSignalRateRef - targetRefRate);
+			signalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
+			//abs(peakSignalRateRef - targetRefRate);
 
 			if (peakSignalRateRef > targetRefRate) {
 				/* Select the spad map that provides the
@@ -986,6 +997,7 @@ VL53L0X_Error VL53L0X_set_reference_spads(VL53L0X_DEV Dev,
 			currentSpadIndex++;
 		}
 	}
+
 	Status = enable_ref_spads(Dev,
 				isApertureSpads,
 				Dev->Data.SpadData.RefGoodSpadMap,

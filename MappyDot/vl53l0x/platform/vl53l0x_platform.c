@@ -37,11 +37,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vl53l0x_platform.h"
 #include "vl53l0x_i2c_platform.h"
 #include "vl53l0x_api.h"
-#include <Windows.h>
+#include <util/delay.h>
 
-#define LOG_FUNCTION_START(fmt, ... )           _LOG_FUNCTION_START(TRACE_MODULE_PLATFORM, fmt, ##__VA_ARGS__)
+/*#define LOG_FUNCTION_START(fmt, ... )           _LOG_FUNCTION_START(TRACE_MODULE_PLATFORM, fmt, ##__VA_ARGS__)
 #define LOG_FUNCTION_END(status, ... )          _LOG_FUNCTION_END(TRACE_MODULE_PLATFORM, status, ##__VA_ARGS__)
 #define LOG_FUNCTION_END_FMT(status, fmt, ... ) _LOG_FUNCTION_END_FMT(TRACE_MODULE_PLATFORM, status, fmt, ##__VA_ARGS__)
+*/
+
+#define LOG_FUNCTION_START(fmt, ... )  
+#define LOG_FUNCTION_END(status, ... )
+#define LOG_FUNCTION_END_FMT(status, fmt, ... )
 
 /**
  * @def I2C_BUFFER_CONFIG
@@ -258,18 +263,19 @@ VL53L0X_Error  VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data){
     return Status;
 }
 
-#define VL53L0X_POLLINGDELAY_LOOPNB  250
+//#define VL53L0X_POLLINGDELAY_LOOPNB  400
 VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev){
-    VL53L0X_Error status = VL53L0X_ERROR_NONE;
-    LOG_FUNCTION_START("");
+	VL53L0X_Error status = VL53L0X_ERROR_NONE;
+	//volatile uint32_t i;
+	LOG_FUNCTION_START("");
 
-    const DWORD cTimeout_ms = 1;
-    HANDLE hEvent = CreateEvent(0, TRUE, FALSE, 0);
-    if(hEvent != NULL)
-    {
-        WaitForSingleObject(hEvent,cTimeout_ms);
-    }
+	/*for(i=0;i<VL53L0X_POLLINGDELAY_LOOPNB;i++){
+		//Do nothing
+		asm("nop");
+	}*/
 
-    LOG_FUNCTION_END(status);
-    return status;
+	 _delay_ms(100); //TODO change this to 5ms?
+
+	LOG_FUNCTION_END(status);
+	return status;
 }

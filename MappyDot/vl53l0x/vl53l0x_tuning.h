@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VL53L0X_TUNING_H_
 
 #include "vl53l0x_def.h"
+#include <avr/pgmspace.h>
 
 
 #ifdef __cplusplus
