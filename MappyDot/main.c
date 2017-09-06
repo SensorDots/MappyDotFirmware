@@ -119,7 +119,7 @@ volatile bool passthrough_mode   = 0;
 volatile bool is_master          = 0;
 
 volatile uint8_t led_mode                      = LED_PWM_ENABLED;
-volatile uint8_t gpio_mode                     = GPIO_PWM_ENABLED;
+volatile uint8_t gpio_mode                     = GPIO_MEASUREMENT_INTERRUPT;
 volatile uint8_t current_ranging_mode          = SET_CONTINUOUS_RANGING_MODE;
 volatile uint8_t current_measurement_mode      = VL53L0X_DEFAULT;
 volatile uint16_t led_threshold                = 300;
@@ -924,10 +924,20 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-		    if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter))  //returns 0 if success
-				flash_led(500,4,0); //error
-			else
-				flash_led(200,1,0);
+			if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads)) //returns 0 if success
+			{
+				if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal)) //returns 0 if success
+				{
+					if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter))  //returns 0 if success
+						flash_led(500,4,0); //error
+					else
+						flash_led(200,1,0);
+				} else {
+					flash_led(500,4,0); //error
+				}
+			} else {
+					flash_led(500,4,0); //error
+			}
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));

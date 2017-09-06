@@ -855,8 +855,8 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 		refSpadCount_int	= minimumSpadCount;
 
 		memcpy(lastSpadArray, Dev->Data.SpadData.RefSpadEnables, spadArraySize);
-		lastSignalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
-		//lastSignalRateDiff = abs(peakSignalRateRef - targetRefRate);
+		//lastSignalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
+		lastSignalRateDiff = abs(peakSignalRateRef - targetRefRate);
 		complete = 0;
 
 		while (!complete) {
@@ -906,8 +906,8 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 			if (Status != VL53L0X_ERROR_NONE)
 				break;
 
-			signalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
-			//abs(peakSignalRateRef - targetRefRate);
+			//signalRateDiff = labs((int32_t)peakSignalRateRef - (int32_t)targetRefRate);
+			signalRateDiff = abs(peakSignalRateRef - targetRefRate);
 
 			if (peakSignalRateRef > targetRefRate) {
 				/* Select the spad map that provides the

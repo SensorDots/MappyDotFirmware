@@ -1876,8 +1876,8 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 		diff1_mcps <<= 8;
 
 		/* FixPoint0824/FixPoint1616 = FixPoint2408 */
-		//xTalkCorrection	 = abs(diff1_mcps/diff2_mcps);
-		xTalkCorrection	 = diff1_mcps/diff2_mcps;
+		xTalkCorrection	 = abs(diff1_mcps/diff2_mcps);
+		//xTalkCorrection	 = diff1_mcps/diff2_mcps;
 
 		/* FixPoint2408 << 8 = FixPoint1616 */
 		xTalkCorrection <<= 8;
