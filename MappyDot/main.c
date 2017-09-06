@@ -463,19 +463,19 @@ int main(void)
 
 					//if (led_duty_cycle > 99) led_duty_cycle = 99; // Done in set_duty
 
-					TIMER_1_set_duty(led_duty_cycle);
-
 					if (filtered_distance > gpio_threshold) gpio_duty_cycle = 0;
 					else if (filtered_distance == 0) gpio_duty_cycle = 0; //Stop "bounce" when invalid measurement
 					else gpio_duty_cycle = (gpio_threshold - filtered_distance)*100/(gpio_threshold - MIN_DIST);
 
 					//if (gpio_duty_cycle > 99) gpio_duty_cycle = 99; // Done in set_duty
 
-					TIMER_0_set_duty(gpio_duty_cycle);
 				} else {
 					led_duty_cycle = 0;
 					gpio_duty_cycle = 0;
+					
 				}
+				TIMER_1_set_duty(led_duty_cycle);
+				TIMER_0_set_duty(gpio_duty_cycle);
 			} 
         }
 
@@ -542,6 +542,11 @@ void delay_ms(uint16_t ms)
  */
 static void flash_led(uint32_t timeout_ms, int8_t num_of_flashes, bool pwm)
 {
+    /* Turn off LED */
+    LED_set_level(true);
+
+	delay_ms(timeout_ms);
+
 	//Can only breath in indefinite mode
     if (pwm && num_of_flashes == -1)
 	{
@@ -771,7 +776,9 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
 		    if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads)) //returns 0 if success
-			    flash_led(500,4,0);
+			    flash_led(500,4,0); //error
+			else
+				flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
@@ -782,7 +789,9 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
 		    if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal)) //returns 0 if success
-			    flash_led(500,4,0);
+			    flash_led(500,4,0); //error
+			else
+			    flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
@@ -915,7 +924,10 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-		    if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter)) flash_led(500,4,0); //returns 0 if success
+		    if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter))  //returns 0 if success
+				flash_led(500,4,0); //error
+			else
+				flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
@@ -925,7 +937,10 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-		    if (calibrateCrosstalk(pDevice, &status,bytes_to_mm(arg),&xTalkCompensationRateMegaCps)) flash_led(500,4,0); //returns 0 if success
+		    if (calibrateCrosstalk(pDevice, &status,bytes_to_mm(arg),&xTalkCompensationRateMegaCps))  //returns 0 if success
+				flash_led(500,4,0); //error
+			else
+				flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));

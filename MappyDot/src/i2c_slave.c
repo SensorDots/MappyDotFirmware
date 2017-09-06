@@ -65,7 +65,7 @@ ISR( TWI1_vect )
 				if(rxbuffer_count < command_size)
 				{
 					// clear TWI interrupt flag, prepare to receive next byte and acknowledge
-					TWCR1 |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+					//TWCR1 |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
 				}
 				else if (rxbuffer_count == command_size)
 				{
@@ -73,14 +73,14 @@ ISR( TWI1_vect )
 					main_process_rx_command(register_address, rxbuffer, command_size);
 
 					// clear TWI interrupt flag, prepare to receive next byte and acknowledge
-					TWCR1 |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+					//TWCR1 |= (1<<TWIE) | (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
 				}
 
 				else
 				{
 					// Incorrect command length, clear TWI interrupt flag, prepare to receive more bytes and don't acknowledge
 					TWCR1 |= (1<<TWIE) | (1<<TWINT) | (0<<TWEA) | (1<<TWEN);
-					break;
+					return;
 				}
 				command_size = check_command_size(register_address);
 				//if command is only single byte (register), we react here
@@ -141,10 +141,12 @@ ISR( TWI1_vect )
 		case TW_ST_LAST_DATA:	// 0xC8 Last byte in TWDR has been transmitted (TWEA = 0); ACK has been received
 		case TW_NO_INFO:					// 0xF8 No relevant state information available; TWINT = 0
 		case TW_BUS_ERROR:					// 0x00 Bus error due to an illegal START or STOP condition
-			TWCR1 =   (1<<TWSTO)|(1<<TWINT);   // Recover from TWI_BUS_ERROR
-			// TODO: Set an ERROR flag to tell main to restart interface.
-			break;
+						
+			// Recover from TWI_BUS_ERROR
+			TWCR1 &= ~( (1<<TWEA) | (1<<TWEN) ); //Stop bus
 
+			TWCR1 = (1<<TWEN)|(1<<TWIE)|(1<<TWINT)|(1<<TWEA);
+			break;
 		default:
 			TWCR1 = (1<<TWEN)|(1<<TWIE)|(1<<TWINT)|(1<<TWEA);		// Prepare for next event. Should be more DATA.
 			break;
