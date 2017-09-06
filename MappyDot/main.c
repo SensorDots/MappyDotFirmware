@@ -293,7 +293,7 @@ int main(void)
 	resetVl53l0xInterrupt(pDevice, &status);
 
 	uint32_t rangeTimeout = RANGE_TIMEOUT_VALUE;
-	uint32_t crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
+	int32_t crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 
 
 	/* Enable PWM timer if PWM enabled */
@@ -324,12 +324,12 @@ int main(void)
 
 		} 
 		
-		if (!crosstalk_interrupt_fired && is_master)
+		if (!crosstalk_interrupt_fired && is_master && crosstalk_enabled)
 		{
 		    crosstalkTimeout--;
 
 		    /* trigger crosstalk retrigger timeout */
-		    if (crosstalkTimeout == 0)
+		    if (crosstalkTimeout <= 0)
 		    {
 				crosstalk_interrupt_fired = true;
 			    crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
