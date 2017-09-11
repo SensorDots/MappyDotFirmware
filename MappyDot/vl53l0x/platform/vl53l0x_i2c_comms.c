@@ -83,10 +83,10 @@ int VL53L0X_write_word(uint8_t address, uint8_t index, uint16_t data) {
 int VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t data) {
 
   	uint8_t data_t[4] = {0};
-  	data_t[3] = (data >> 24) & 0xFF; // value highest byte
-  	data_t[2] = (data >> 16) & 0xFF;
-  	data_t[1] = (data >>  8) & 0xFF;
-  	data_t[0] =  data        & 0xFF;
+  	data_t[0] = (data >> 24) & 0xFF; // value highest byte
+  	data_t[1] = (data >> 16) & 0xFF;
+  	data_t[2] = (data >>  8) & 0xFF;
+  	data_t[3] =  data        & 0xFF;
 
 	if (i2c_writeReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
 
@@ -123,11 +123,11 @@ int VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *data) {
   	uint8_t data_t[4] = {0};
 	if (i2c_readReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
   	
-  	uint16_t value;
+  	uint32_t value;
 
   	value  = (uint32_t)data_t[0] << 24; // value highest byte
   	value |= (uint32_t)data_t[1] << 16;
-  	value |= (uint16_t)data_t[2] <<  8;
+  	value |= (uint32_t)data_t[2] <<  8;
   	value |=           data_t[3];       // value lowest byte
 
 	*data = value;

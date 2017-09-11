@@ -340,7 +340,7 @@ VL53L0X_Error startSingleRangingMeasurement(VL53L0X_Dev_t * device, VL53L0X_Erro
     //VL53L0X_Error   Status = VL53L0X_ERROR_NONE;
 	*status = VL53L0X_ERROR_NONE;
     //FixPoint1616_t  LimitCheckCurrent;
-    *status = VL53L0X_PerformSingleRangingMeasurement( device, RangingMeasurementData );
+    *status = VL53L0X_PerformSingleRangingMeasurement(device, RangingMeasurementData, 0);
     //VL53L0X_GetLimitCheckCurrent( pDevice, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, &LimitCheckCurrent );
     resetVl53l0xInterrupt(device,status);
     return 0;

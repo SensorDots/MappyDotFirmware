@@ -32,6 +32,7 @@
 #include "vl53l0x_api_strings.h"
 #include "vl53l0x_def.h"
 #include "vl53l0x_platform.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -1273,7 +1274,7 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetDmaxCalParameters(VL53L0X_DEV Dev,
  * @return  VL53L0X_ERROR_NONE    Success
  * @return  "Other error code"   See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_PerformSingleMeasurement(VL53L0X_DEV Dev);
+VL53L0X_API VL53L0X_Error VL53L0X_PerformSingleMeasurement(VL53L0X_DEV Dev, bool calibration);
 
 /**
  * @brief Perform Reference Calibration
@@ -1545,7 +1546,7 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetHistogramMeasurementData(VL53L0X_DEV Dev,
  * @return  "Other error code"        See ::VL53L0X_Error
  */
 VL53L0X_API VL53L0X_Error VL53L0X_PerformSingleRangingMeasurement(VL53L0X_DEV Dev,
-	VL53L0X_RangingMeasurementData_t *pRangingMeasurementData);
+	VL53L0X_RangingMeasurementData_t *pRangingMeasurementData, bool calibration);
 
 /**
  * @brief Performs a single histogram measurement and retrieve the histogram

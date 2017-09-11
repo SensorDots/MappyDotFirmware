@@ -93,7 +93,7 @@ VL53L0X_Error VL53L0X_perform_xtalk_calibration(VL53L0X_DEV Dev,
 		total_count = 0;
 		for (xtalk_meas = 0; xtalk_meas < 50; xtalk_meas++) {
 			Status = VL53L0X_PerformSingleRangingMeasurement(Dev,
-				&RangingMeasurementData);
+				&RangingMeasurementData, 1);
 
 			if (Status != VL53L0X_ERROR_NONE)
 				break;
@@ -236,7 +236,7 @@ VL53L0X_Error VL53L0X_perform_offset_calibration(VL53L0X_DEV Dev,
 		total_count = 0;
 		for (meas = 0; meas < 50; meas++) {
 			Status = VL53L0X_PerformSingleRangingMeasurement(Dev,
-					&RangingMeasurementData);
+					&RangingMeasurementData, 1);
 
 			if (Status != VL53L0X_ERROR_NONE)
 				break;
@@ -660,7 +660,7 @@ VL53L0X_Error perform_ref_signal_measurement(VL53L0X_DEV Dev,
 
 	if (status == VL53L0X_ERROR_NONE)
 		status = VL53L0X_PerformSingleRangingMeasurement(Dev,
-				&rangingMeasurementData);
+				&rangingMeasurementData, 1);
 
 	if (status == VL53L0X_ERROR_NONE)
 		status = VL53L0X_WrByte(Dev, 0xFF, 0x01);

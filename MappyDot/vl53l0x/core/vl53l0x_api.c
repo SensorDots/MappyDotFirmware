@@ -2081,7 +2081,7 @@ VL53L0X_Error VL53L0X_GetDmaxCalParameters(VL53L0X_DEV Dev,
 /* End Group PAL Parameters Functions */
 
 /* Group PAL Measurement Functions */
-VL53L0X_Error VL53L0X_PerformSingleMeasurement(VL53L0X_DEV Dev)
+VL53L0X_Error VL53L0X_PerformSingleMeasurement(VL53L0X_DEV Dev, bool calibration)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	VL53L0X_DeviceModes DeviceMode;
@@ -2097,9 +2097,11 @@ VL53L0X_Error VL53L0X_PerformSingleMeasurement(VL53L0X_DEV Dev)
 		&& DeviceMode == VL53L0X_DEVICEMODE_SINGLE_RANGING)
 		Status = VL53L0X_StartMeasurement(Dev);
 
-
-	/*if (Status == VL53L0X_ERROR_NONE)
-		Status = VL53L0X_measurement_poll_for_completion(Dev); */
+    if (calibration)
+	{
+		if (Status == VL53L0X_ERROR_NONE)
+			Status = VL53L0X_measurement_poll_for_completion(Dev);
+	}
 
 
 	/* Change PAL State in case of single ranging or single histogram */
@@ -2578,7 +2580,7 @@ VL53L0X_Error VL53L0X_GetHistogramMeasurementData(VL53L0X_DEV Dev,
 }
 
 VL53L0X_Error VL53L0X_PerformSingleRangingMeasurement(VL53L0X_DEV Dev,
-	VL53L0X_RangingMeasurementData_t *pRangingMeasurementData)
+	VL53L0X_RangingMeasurementData_t *pRangingMeasurementData, bool calibration)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 
@@ -2589,17 +2591,17 @@ VL53L0X_Error VL53L0X_PerformSingleRangingMeasurement(VL53L0X_DEV Dev,
 	Status = VL53L0X_SetDeviceMode(Dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
 
 	if (Status == VL53L0X_ERROR_NONE)
-		Status = VL53L0X_PerformSingleMeasurement(Dev);
+		Status = VL53L0X_PerformSingleMeasurement(Dev, calibration);
+
+    if (calibration) {
+		if (Status == VL53L0X_ERROR_NONE)
+			Status = VL53L0X_GetRangingMeasurementData(Dev,
+				pRangingMeasurementData);
 
 
-	/*if (Status == VL53L0X_ERROR_NONE)
-		Status = VL53L0X_GetRangingMeasurementData(Dev,
-			pRangingMeasurementData);*/
-
-
-	/*if (Status == VL53L0X_ERROR_NONE)
-		Status = VL53L0X_ClearInterruptMask(Dev, 0);*/
-
+		if (Status == VL53L0X_ERROR_NONE)
+			Status = VL53L0X_ClearInterruptMask(Dev, 0);
+    }
 
 	LOG_FUNCTION_END(Status);
 	return Status;

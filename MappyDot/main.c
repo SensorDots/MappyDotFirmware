@@ -154,6 +154,7 @@ uint8_t todo_arg_length;
 
 static volatile bool measurement_interrupt_fired = false;
 static volatile bool crosstalk_interrupt_fired = false;
+static volatile bool calibrating = false;
 uint8_t mappydot_name[16];
 uint8_t settings_buffer[SETTINGS_SIZE + 1]; //Last byte is CRC
 
@@ -307,212 +308,214 @@ int main(void)
     /* Main code */
     while (1)
     {
+	    if (!calibrating)
+		{		
+			if (command_to_handle) 
+			{
+				handle_rx_command(todo_command, todo_arg, todo_arg_length);
+				command_to_handle = false;
+			}
 
-		if (command_to_handle) 
-		{
-			handle_rx_command(todo_command, todo_arg, todo_arg_length);
-			command_to_handle = false;
-		}
+			if (crosstalk_enabled && crosstalk_interrupt_fired)
+			{
+				crosstalk_interrupt_fired = false;
 
-        if (crosstalk_enabled && crosstalk_interrupt_fired)
-		{
-			crosstalk_interrupt_fired = false;
+				crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 
-			crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
+				startSingleRangingMeasurement(pDevice, &status, &measure);
 
-			startSingleRangingMeasurement(pDevice, &status, &measure);
-
-		} 
+			} 
 		
-		if (!crosstalk_interrupt_fired && is_master && crosstalk_enabled)
-		{
-		    crosstalkTimeout--;
-
-		    /* trigger crosstalk retrigger timeout */
-		    if (crosstalkTimeout <= 0)
-		    {
-				crosstalk_interrupt_fired = true;
-			    crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
-		    }
-		}
-
-
-        if (measurement_interrupt_fired)
-        {
-			/* We can do a fair bit of work here once the ranging has complete, 
-			* because the VL53L0X is now busy getting another range ready. */
-
-		    measurement_interrupt_fired = false;
-
-			rangeTimeout = RANGE_TIMEOUT_VALUE;
-
-			if (crosstalk_enabled)
+			if (!crosstalk_interrupt_fired && is_master && crosstalk_enabled)
 			{
-				/* create trigger after measurement finished */
-				/* Note that for this to happen, we are in "crosstalk"
-				   (single) ranging mode */
-				ADDR_OUT_set_level(false);
-			}        
+				crosstalkTimeout--;
 
-		    /* If we are in measurement output modes */
-            if (led_mode == LED_MEASUREMENT_OUTPUT && !factory_mode) LED_set_level(false);
-
-            if (gpio_mode == GPIO_MEASUREMENT_INTERRUPT && !factory_mode) SYNC_set_level(true);
-
-            /* Read current mm */
-            readRange(pDevice, &status, &measure);
-
-			error_code = measure.RangeStatus;
-            /* If not phase error */
-            if (measure.RangeStatus != 4)
-            {
-                current_millimeters = measure.RangeMilliMeter;
-				distance_error = (uint32_t)measure.Sigma >> 16;
-            } else {
-				current_millimeters = 0;
-				distance_error = 0;
-			}			
-
-			/* 0 is invalid measurement */
-
-            /* Do some sanity checking (if measurement greater than 4 meters) */
-            if (current_millimeters >= MAX_DIST) current_millimeters = 0;
-
-            /* Valid measurements come out of the sensor as values > 30mm. */
-            if (current_millimeters <= MIN_DIST && current_millimeters > 0) current_millimeters = MIN_DIST;
-
-			real_distance = current_millimeters;
-            filtered_distance = real_distance;
-
-            if (filtered_distance != 0)
-            {
-                
-#ifndef DEV_DISABLE
-
-				if (filtering_enabled)
-					filtered_distance = bwlpf(filtered_distance, &low_pass_filter_state);
-
-				/* Averaging happens after filtering */
-				if (averaging_enabled)
+				/* trigger crosstalk retrigger timeout */
+				if (crosstalkTimeout <= 0)
 				{
-					//Push current measurement into ring buffer for filtering
-					hb_push_back(&history_buffer, &filtered_distance);
-					filtered_distance = avg(history_buffer.buffer,averaging_size);
+					crosstalk_interrupt_fired = true;
+					crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 				}
-#endif
-            }
-			
-			/* Output modes */
-			if (!factory_mode) 
+			}
+
+
+			if (measurement_interrupt_fired)
 			{
-				if (led_mode == LED_THRESHOLD_ENABLED)
-				{
-					if (filtered_distance <= led_threshold && filtered_distance != 0)
-					{
-						/* Turn on LED */
-						LED_set_level(false);
-					}
+				/* We can do a fair bit of work here once the ranging has complete, 
+				* because the VL53L0X is now busy getting another range ready. */
 
-					else
-					{
-						/* Turn off LED */
-						LED_set_level(true);
-					}
-				}
+				measurement_interrupt_fired = false;
 
-				if (gpio_mode == GPIO_THRESHOLD_ENABLED)
-				{
-					if (filtered_distance <= gpio_threshold && filtered_distance != 0)
-					{
-						/* Turn on GPIO */
-						SYNC_set_level(true);
-					
-					}
+				rangeTimeout = RANGE_TIMEOUT_VALUE;
 
-					else
-					{
-						/* Turn off GPIO */
-						SYNC_set_level(false);
-					}
-				}
-
-				/* If we are in measurement output modes */
-				/* Note that in some modes this will output very quickly (around 60Hz)
-				   when there is no valid measurement */
-				if (led_mode == LED_MEASUREMENT_OUTPUT) LED_set_level(true);
-
-				if (gpio_mode == GPIO_MEASUREMENT_INTERRUPT) SYNC_set_level(false);
-
-				/* Crosstalk pulse off - The timing of this is "dont care" */
 				if (crosstalk_enabled)
 				{
-					/* remove pulse */
-					ADDR_OUT_set_level(true);
-				}
+					/* create trigger after measurement finished */
+					/* Note that for this to happen, we are in "crosstalk"
+					   (single) ranging mode */
+					ADDR_OUT_set_level(false);
+				}        
 
-				/* Calculate "Software" (Timer Based) PWM */
-				/* This is pretty lightweight, it just uses software to calc the duty cycle.
-				 * Timers then work to fire the pins. */
+				/* If we are in measurement output modes */
+				if (led_mode == LED_MEASUREMENT_OUTPUT && !factory_mode) LED_set_level(false);
 
-				if (measure.RangeStatus != 3 && measure.RangeStatus != 4) //If min range failure hasn't occurred
-				{ 
+				if (gpio_mode == GPIO_MEASUREMENT_INTERRUPT && !factory_mode) SYNC_set_level(true);
 
-					if (filtered_distance > led_threshold) led_duty_cycle = 0;
-					else if (filtered_distance == 0) led_duty_cycle = 0; //Stop "bounce" when invalid measurement
-					else led_duty_cycle = (led_threshold - filtered_distance)*100/(led_threshold - MIN_DIST);
+				/* Read current mm */
+				readRange(pDevice, &status, &measure);
 
-					//if (led_duty_cycle > 99) led_duty_cycle = 99; // Done in set_duty
-
-					if (filtered_distance > gpio_threshold) gpio_duty_cycle = 0;
-					else if (filtered_distance == 0) gpio_duty_cycle = 0; //Stop "bounce" when invalid measurement
-					else gpio_duty_cycle = (gpio_threshold - filtered_distance)*100/(gpio_threshold - MIN_DIST);
-
-					//if (gpio_duty_cycle > 99) gpio_duty_cycle = 99; // Done in set_duty
-
+				error_code = measure.RangeStatus;
+				/* If not phase error */
+				if (measure.RangeStatus != 4)
+				{
+					current_millimeters = measure.RangeMilliMeter;
+					distance_error = (uint32_t)measure.Sigma >> 16;
 				} else {
-					led_duty_cycle = 0;
-					gpio_duty_cycle = 0;
+					current_millimeters = 0;
+					distance_error = 0;
+				}			
+
+				/* 0 is invalid measurement */
+
+				/* Do some sanity checking (if measurement greater than 4 meters) */
+				if (current_millimeters >= MAX_DIST) current_millimeters = 0;
+
+				/* Valid measurements come out of the sensor as values > 30mm. */
+				if (current_millimeters <= MIN_DIST && current_millimeters > 0) current_millimeters = MIN_DIST;
+
+				real_distance = current_millimeters;
+				filtered_distance = real_distance;
+
+				if (filtered_distance != 0)
+				{
+                
+	#ifndef DEV_DISABLE
+
+					if (filtering_enabled)
+						filtered_distance = bwlpf(filtered_distance, &low_pass_filter_state);
+
+					/* Averaging happens after filtering */
+					if (averaging_enabled)
+					{
+						//Push current measurement into ring buffer for filtering
+						hb_push_back(&history_buffer, &filtered_distance);
+						filtered_distance = avg(history_buffer.buffer,averaging_size);
+					}
+	#endif
+				}
+			
+				/* Output modes */
+				if (!factory_mode) 
+				{
+					if (led_mode == LED_THRESHOLD_ENABLED)
+					{
+						if (filtered_distance <= led_threshold && filtered_distance != 0)
+						{
+							/* Turn on LED */
+							LED_set_level(false);
+						}
+
+						else
+						{
+							/* Turn off LED */
+							LED_set_level(true);
+						}
+					}
+
+					if (gpio_mode == GPIO_THRESHOLD_ENABLED)
+					{
+						if (filtered_distance <= gpio_threshold && filtered_distance != 0)
+						{
+							/* Turn on GPIO */
+							SYNC_set_level(true);
 					
-				}
-				TIMER_1_set_duty(led_duty_cycle);
-				TIMER_0_set_duty(gpio_duty_cycle);
-			} 
-        }
+						}
 
-        else if (!crosstalk_enabled)
-        {
-            rangeTimeout--;
+						else
+						{
+							/* Turn off GPIO */
+							SYNC_set_level(false);
+						}
+					}
 
+					/* If we are in measurement output modes */
+					/* Note that in some modes this will output very quickly (around 60Hz)
+					   when there is no valid measurement */
+					if (led_mode == LED_MEASUREMENT_OUTPUT) LED_set_level(true);
 
-			/* Reset interrupt if we have a communication timeout */
-            if (rangeTimeout == 0)
-            {
-                rangeTimeout = RANGE_TIMEOUT_VALUE;
-                resetVl53l0xInterrupt(pDevice, &status);
-            }
-        }
-		/* Pulse LED when in factory mode */
-		if (factory_mode)
-		{
-			led_pulse_timeout++;
-			if (led_pulse_timeout > 100) led_pulse_timeout = 0;
-			if (led_pulse_timeout == 0) {
-				if (led_pulse_dir) led_pulse--;
-				else led_pulse++;
+					if (gpio_mode == GPIO_MEASUREMENT_INTERRUPT) SYNC_set_level(false);
 
-				if (led_pulse > 99) 
-				{
-					led_pulse = 99;
-					led_pulse_dir = 1;
-				} else if (led_pulse < 0)
-				{
-					led_pulse = 0;
-					led_pulse_dir = 0;
-				}
-				TIMER_1_set_duty(led_pulse);
+					/* Crosstalk pulse off - The timing of this is "dont care" */
+					if (crosstalk_enabled)
+					{
+						/* remove pulse */
+						ADDR_OUT_set_level(true);
+					}
+
+					/* Calculate "Software" (Timer Based) PWM */
+					/* This is pretty lightweight, it just uses software to calc the duty cycle.
+					 * Timers then work to fire the pins. */
+
+					if (measure.RangeStatus != 3 && measure.RangeStatus != 4) //If min range failure hasn't occurred
+					{ 
+
+						if (filtered_distance > led_threshold) led_duty_cycle = 0;
+						else if (filtered_distance == 0) led_duty_cycle = 0; //Stop "bounce" when invalid measurement
+						else led_duty_cycle = (led_threshold - filtered_distance)*100/(led_threshold - MIN_DIST);
+
+						//if (led_duty_cycle > 99) led_duty_cycle = 99; // Done in set_duty
+
+						if (filtered_distance > gpio_threshold) gpio_duty_cycle = 0;
+						else if (filtered_distance == 0) gpio_duty_cycle = 0; //Stop "bounce" when invalid measurement
+						else gpio_duty_cycle = (gpio_threshold - filtered_distance)*100/(gpio_threshold - MIN_DIST);
+
+						//if (gpio_duty_cycle > 99) gpio_duty_cycle = 99; // Done in set_duty
+
+					} else {
+						led_duty_cycle = 0;
+						gpio_duty_cycle = 0;
+					
+					}
+					TIMER_1_set_duty(led_duty_cycle);
+					TIMER_0_set_duty(gpio_duty_cycle);
+				} 
 			}
-		}	
-    }
+
+			else if (!crosstalk_enabled)
+			{
+				rangeTimeout--;
+
+
+				/* Reset interrupt if we have a communication timeout */
+				if (rangeTimeout == 0)
+				{
+					rangeTimeout = RANGE_TIMEOUT_VALUE;
+					resetVl53l0xInterrupt(pDevice, &status);
+				}
+			}
+			/* Pulse LED when in factory mode */
+			if (factory_mode)
+			{
+				led_pulse_timeout++;
+				if (led_pulse_timeout > 100) led_pulse_timeout = 0;
+				if (led_pulse_timeout == 0) {
+					if (led_pulse_dir) led_pulse--;
+					else led_pulse++;
+
+					if (led_pulse > 99) 
+					{
+						led_pulse = 99;
+						led_pulse_dir = 1;
+					} else if (led_pulse < 0)
+					{
+						led_pulse = 0;
+						led_pulse_dir = 0;
+					}
+					TIMER_1_set_duty(led_pulse);
+				}
+			}	
+		}
+	}
 }
 
 /**
@@ -772,29 +775,33 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 
         else if (command == CALIBRATE_SPAD) 
 		{
+		    calibrating = true;
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-		    if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads)) //returns 0 if success
+		    if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads) == 1) //returns 0 if success
 			    flash_led(500,4,0); //error
 			else
 				flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+			calibrating = false;
         }
         else if (command == TEMPERATURE_CALIBRATION) 
 		{
+			calibrating = true;
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-		    if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal)) //returns 0 if success
+		    if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal) == 1) //returns 0 if success
 			    flash_led(500,4,0); //error
 			else
 			    flash_led(200,1,0);
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+			calibrating = false;
 		}
 
         else if (command == FILTERING_ENABLE) filtering_enabled = true;
@@ -921,17 +928,18 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
         else if (command == SET_LED_THRESHOLD_DISTANCE_IN_MM) led_threshold = bytes_to_mm(arg);
 
         else if (command == CALIBRATE_DISTANCE_OFFSET) {
+		    calibrating = true;
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
-			if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads)) //returns 0 if success
+			if(calibrateSPAD(pDevice, &status,&refSpadCount,&ApertureSpads) == 0) //returns 0 if success
 			{
-				if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal)) //returns 0 if success
+				if(calibrateTemperature(pDevice, &status,&vhvSettings,&phaseCal) == 0) //returns 0 if success
 				{
-					if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter))  //returns 0 if success
-						flash_led(500,4,0); //error
-					else
+					if (calibrateDistanceOffset(pDevice, &status,bytes_to_mm(arg),&offsetMicroMeter) == 0)  //returns 0 if success
 						flash_led(200,1,0);
+					else
+						flash_led(500,4,0); //error
 				} else {
 					flash_led(500,4,0); //error
 				}
@@ -941,9 +949,12 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+
+			calibrating = false;
 		}	    
 
         else if (command == CALIBRATE_CROSSTALK) {
+		    calibrating = true;
 			//Set to single ranging mode (stop measurement)
 			setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 
@@ -954,6 +965,7 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+			calibrating = false;
 		        
 		}
     }
