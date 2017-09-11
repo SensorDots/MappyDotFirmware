@@ -709,7 +709,14 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 {
     if (arg_length == 0)
     {
-        if (command == VL53L0X_SHUTDOWN)
+	    if (command == 0x2e) //Hidden ADDR_IN test command
+		{
+			ADDR_IN_set_dir(PORT_DIR_OUT);
+			ADDR_IN_set_level(true);
+			delay_ms(200);
+			ADDR_IN_set_dir(PORT_DIR_IN);
+		}
+        else if (command == VL53L0X_SHUTDOWN)
         {
 		    /* Set XSHUT to low to turn off (Shutdown is active low). */
 		    XSHUT_set_level(false);
