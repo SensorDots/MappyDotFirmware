@@ -7,6 +7,10 @@ Please note, the Debug release of this firmware will not fit with the bootloader
 Some non critical functions can be easily disabled with the DEV_DISABLE compiler flag.
 When running with the bootloader, the compiled size needs to be under 7C00 bytes to work with bootloader.
 
+## Firmware Versions
+MappyDots can be queried for their firmware version with the I2C command N (0x4E). It returns a 20 byte character array representing the firmware version. New releases of the binary firmware will be build and placed the the Release directory. 
+- MD_FW_V1.0 (11/09/2017) - Release firmware. 
+
 ## Features Not Currently Implemented
    - I2C Passthrough Mode
    - MappyDot Mode
