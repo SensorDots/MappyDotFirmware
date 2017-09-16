@@ -15,4 +15,5 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - I2C Passthrough Mode
    - MappyDot Mode
    - Set as master for inter-device crosstalk. This allows you to group devices on a single bus.
+   - MCU sleep states (idle between interrupt and shutdown modes).
    - Add Initisation Error Codes
