@@ -71,7 +71,7 @@ int8_t I2C_1_init()
     TWCR1 = (1 << TWEN)   /* TWI1: enabled */
             | (1 << TWIE) /* TWI1 Interrupt: enabled */
             | (1 << TWEA) /* TWI1 Acknowledge: enabled */;
-    TWAR1 = (0x40 << TWA0) /* TWI1 (Slave) Address: 64 */
+    TWAR1 = (0x07 << TWA0) /* TWI1 (Slave) Address: 7 */
             | (1 << TWGCE) /* TWI1 General Call Recognition: enabled */;
     TWAMR1 = (0x00 << TWAM0) /* TWI1 (Slave) Address Mask: 0 */;
     return 0;
