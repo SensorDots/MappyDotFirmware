@@ -233,4 +233,6 @@ void system_init()
     I2C_1_initialization();
     //TIMER_0_initialization();
     //TIMER_1_initialization();
+
+	UNUSED_set_input();
 }

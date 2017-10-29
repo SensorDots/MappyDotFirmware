@@ -21,6 +21,7 @@
 #include "vl53l0x.h"
 #include "vl53l0x_i2c_platform.h"
 #include "vl53l0x_api.h"
+#include "tc16.h"
 
 void startContinuous(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint32_t period_ms);
 uint16_t setSingleRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status);
@@ -167,10 +168,12 @@ void setRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t mode
     if (mode == 1)
     {
 	    startContinuous(device, status, 0);
+		TIMER_2_init();
     }
 
     else
     {
+	    TIMER_2_stop();
 	    stopContinuous(device, status);
 		setSingleRangingMode(device, status);
     }

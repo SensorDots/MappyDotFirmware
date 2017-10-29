@@ -55,19 +55,19 @@
 #include "stackmon.h"
 #include "vl53l0x_types.h"
 #include "main.h"
+#include "sleeping.h"
 
 #ifdef DEV_DISABLE
 #warning Some functions are disabled with DEV_DISABLE
 #endif
 
-#define VERSION_STRING                "MD_FW_V1.0"
+#define VERSION_STRING                "MD_FW_V1.1"
 
 #define EEPROM_BOOTLOADER_BYTE        0x02
 #define EEPROM_ADDRESS_BYTE           0x01
 #define EEPROM_FACTORY_SETTINGS_START 0x20
 #define EEPROM_USER_SETTINGS_START    0x60
 #define EEPROM_DEVICE_NAME            0x100
-#define RANGE_TIMEOUT_VALUE           300000
 #define FILTER_ORDER                  2  //Filter order
 #define SAMPLING_FREQ                 30 //Samples per second
 #define FILTER_FREQUENCY              6  //Hz
@@ -120,7 +120,7 @@ volatile bool is_master          = 0;
 
 volatile uint8_t led_mode                      = LED_PWM_ENABLED;
 volatile uint8_t gpio_mode                     = GPIO_MEASUREMENT_INTERRUPT;
-volatile uint8_t current_ranging_mode          = SET_CONTINUOUS_RANGING_MODE;
+volatile uint8_t current_ranging_mode          = SET_CONTINUOUS_RANGING_MODE; //SET_SINGLE_RANGING_MODE; 
 volatile uint8_t current_measurement_mode      = VL53L0X_DEFAULT;
 volatile uint32_t led_threshold                = 300;
 volatile uint32_t gpio_threshold               = 300;
@@ -153,6 +153,7 @@ uint8_t todo_arg[16];
 uint8_t todo_arg_length;
 
 static volatile bool measurement_interrupt_fired = false;
+static volatile bool interrupt_timeout_interrupt_fired = false;
 static volatile bool crosstalk_interrupt_fired = false;
 static volatile bool calibrating = false;
 uint8_t mappydot_name[16];
@@ -162,6 +163,9 @@ int main(void)
 {	   
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
+
+	/* Disables analog comparartor to save power */
+    disable_analog();
 
     /* Set XSHUT to high to turn on (Shutdown is active low). */
     XSHUT_set_level(true);
@@ -293,7 +297,6 @@ int main(void)
 	measurement_interrupt_fired = false;
 	resetVl53l0xInterrupt(pDevice, &status);
 
-	uint32_t rangeTimeout = RANGE_TIMEOUT_VALUE;
 	int32_t crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 
 
@@ -305,11 +308,18 @@ int main(void)
 	static uint8_t led_duty_cycle = 0;
     static uint8_t gpio_duty_cycle = 0;
 
+	/* Start no interrupt timer */
+	if (current_ranging_mode == SET_CONTINUOUS_RANGING_MODE) TIMER_2_init();
+
     /* Main code */
     while (1)
     {
 	    if (!calibrating)
-		{		
+		{	
+		    /* Put the microcontroller to sleep
+			   Everything after this is affected by interrupts */
+		    sleep_avr();
+
 			if (command_to_handle) 
 			{
 				handle_rx_command(todo_command, todo_arg, todo_arg_length);
@@ -344,9 +354,12 @@ int main(void)
 				/* We can do a fair bit of work here once the ranging has complete, 
 				* because the VL53L0X is now busy getting another range ready. */
 
+				/* Reset the no interrupt timer */
+				if (current_ranging_mode == SET_CONTINUOUS_RANGING_MODE) TIMER_2_reset();
+
 				measurement_interrupt_fired = false;
 
-				rangeTimeout = RANGE_TIMEOUT_VALUE;
+				//rangeTimeout = RANGE_TIMEOUT_VALUE;
 
 				if (crosstalk_enabled)
 				{
@@ -481,17 +494,18 @@ int main(void)
 				} 
 			}
 
-			else if (!crosstalk_enabled)
+			else if (!crosstalk_enabled && interrupt_timeout_interrupt_fired)
 			{
-				rangeTimeout--;
+			    interrupt_timeout_interrupt_fired = 0;
+				//rangeTimeout--;
 
 
 				/* Reset interrupt if we have a communication timeout */
-				if (rangeTimeout == 0)
-				{
-					rangeTimeout = RANGE_TIMEOUT_VALUE;
+				//if (rangeTimeout == 0)
+				//{
+				//	rangeTimeout = RANGE_TIMEOUT_VALUE;
 					resetVl53l0xInterrupt(pDevice, &status);
-				}
+				//}
 			}
 			/* Pulse LED when in factory mode */
 			if (factory_mode)
@@ -831,7 +845,10 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
         {
             current_ranging_mode = SET_CONTINUOUS_RANGING_MODE;
 
-            if (crosstalk_enabled != 1) setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+            if (crosstalk_enabled != 1) { 
+				setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
+			}
+
         }
 
         else if (command == SET_SINGLE_RANGING_MODE)
@@ -1225,6 +1242,12 @@ ISR(TIMER3_COMPB_vect)
     /* Turn off LED */
     LED_set_level(true);
 
+}
+
+//No interrupt overflow (this will fire every ~500ms if no interrupt arrived)
+ISR(TIMER4_OVF_vect)
+{
+    interrupt_timeout_interrupt_fired = true;
 }
 
 /* Debugging purposes */
