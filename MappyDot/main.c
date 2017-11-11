@@ -22,6 +22,7 @@
    - MappyDot Mode
    - Set as master for inter-device crosstalk. This allows you to group devices.
    - Add Initisation Error Codes
+   - Assign new start address to master and assign master in firmware.
 
    ATmega328pb:
    Fuse E: 0xfd (2.7V BOD)
@@ -333,7 +334,6 @@ int main(void)
 				crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 
 				startSingleRangingMeasurement(pDevice, &status, &measure);
-
 			} 
 		
 			if (!crosstalk_interrupt_fired && is_master && crosstalk_enabled)
@@ -358,8 +358,6 @@ int main(void)
 				if (current_ranging_mode == SET_CONTINUOUS_RANGING_MODE) TIMER_2_reset();
 
 				measurement_interrupt_fired = false;
-
-				//rangeTimeout = RANGE_TIMEOUT_VALUE;
 
 				if (crosstalk_enabled)
 				{
@@ -497,15 +495,11 @@ int main(void)
 			else if (!crosstalk_enabled && interrupt_timeout_interrupt_fired)
 			{
 			    interrupt_timeout_interrupt_fired = 0;
-				//rangeTimeout--;
 
 
 				/* Reset interrupt if we have a communication timeout */
-				//if (rangeTimeout == 0)
-				//{
-				//	rangeTimeout = RANGE_TIMEOUT_VALUE;
-					resetVl53l0xInterrupt(pDevice, &status);
-				//}
+                resetVl53l0xInterrupt(pDevice, &status);
+				
 			}
 			/* Pulse LED when in factory mode */
 			if (factory_mode)
@@ -1244,7 +1238,7 @@ ISR(TIMER3_COMPB_vect)
 
 }
 
-//No interrupt overflow (this will fire every ~500ms if no interrupt arrived)
+/* No interrupt overflow (this will fire every ~500ms if no interrupt arrived) */
 ISR(TIMER4_OVF_vect)
 {
     interrupt_timeout_interrupt_fired = true;
