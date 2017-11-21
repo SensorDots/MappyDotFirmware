@@ -19,3 +19,4 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
    - Add Initisation Error Codes.
    - Assign new start address to master and assign master in firmware.
+   - Custom Profiles

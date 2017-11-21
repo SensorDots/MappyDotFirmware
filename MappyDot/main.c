@@ -23,6 +23,7 @@
    - Set as master for inter-device crosstalk. This allows you to group devices.
    - Add Initisation Error Codes
    - Assign new start address to master and assign master in firmware.
+   - Custom profiles
 
    ATmega328pb:
    Fuse E: 0xfd (2.7V BOD)
