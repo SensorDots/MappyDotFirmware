@@ -14,6 +14,8 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.1 (29/10/2017) - Added IDLE sleep to save ~2-5mA and some small bug fixes. 
    
 ## Features Not Currently Implemented
+   - Recover previous I2C address after reset if address initialisation failed (also don't store new value if not changed in EEPROM).
+   - Watchdog timer.
    - I2C Passthrough Mode.
    - MappyDot Mode.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
