@@ -6,7 +6,7 @@ The firmware is developed for use and compilation with Atmel Studio.
 ## Compile Size
 Please note, the Debug release of this firmware will not fit with the bootloader. When developing and debugging you will need to disable some functions or erase the bootloader and BOOTRST fuses. 
 Some non critical functions can be easily disabled with the DEV_DISABLE compiler flag.
-When running with the bootloader, the compiled size needs to be under 7C00 bytes to work with bootloader.
+When running with the bootloader, the compiled size needs to be under 0x7C00 bytes to work with bootloader.
 
 ## Firmware Versions
 MappyDots can be queried for their firmware version with the I2C command N (0x4E). It returns a 10 byte character array representing the firmware version. Stable major releases of the binary firmware will be built and placed the the Releases directory.
@@ -14,7 +14,7 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.1 (29/10/2017) - Added IDLE sleep to save ~2-5mA and some small bug fixes. 
    - MD_FW_V1.2 (14/01/2018) - Added custom measurement mode profile setting and saving (new documentation also added to https://sensordots.org/mappydotreg). Cleanup of code and API functions. Tweaks to profile setting code to support the custom measurement profiles.
    
-## Features Not Currently Implemented
+## Features Currently Being Developed
    - Recover previous I2C address after reset if address initialisation failed (also don't store new value if not changed in EEPROM).
    - Watchdog timer.
    - MappyDot Mode.
