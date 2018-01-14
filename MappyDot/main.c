@@ -512,7 +512,7 @@ int main(void)
 			if (factory_mode)
 			{
 				led_pulse_timeout++;
-				if (led_pulse_timeout > 100) led_pulse_timeout = 0;
+				if (led_pulse_timeout > 12) led_pulse_timeout = 0;
 				if (led_pulse_timeout == 0) {
 					if (led_pulse_dir) led_pulse--;
 					else led_pulse++;
