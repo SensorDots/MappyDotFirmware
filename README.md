@@ -17,7 +17,6 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
 ## Features Not Currently Implemented
    - Recover previous I2C address after reset if address initialisation failed (also don't store new value if not changed in EEPROM).
    - Watchdog timer.
-   - I2C Passthrough Mode.
    - MappyDot Mode.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
    - Add VL53L0X Initisation Error Codes.
