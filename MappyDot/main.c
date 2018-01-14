@@ -71,10 +71,12 @@
 #define EEPROM_FACTORY_SETTINGS_START 0x20
 #define EEPROM_USER_SETTINGS_START    0x60
 #define EEPROM_DEVICE_NAME            0x100
+#define EEPROM_CUSTOM_PROFILE_SETINGS 0x120
 #define FILTER_ORDER                  2  //Filter order
 #define SAMPLING_FREQ                 30 //Samples per second
 #define FILTER_FREQUENCY              6  //Hz
-#define SETTINGS_SIZE                 38 // first byte is 0
+#define SETTINGS_SIZE                 29 // first byte is 0
+#define CUSTOM_PROFILE_SETTINGS_SIZE  9
 #define MIN_DIST                      30 //minimum distance from VL53L0X
 #define MAX_DIST                      4000 //Max sanity distance from VL53L0X
 #define ACCURACY_LIMIT                1200
@@ -100,7 +102,7 @@ VL53L0X_Dev_t * pDevice;
 VL53L0X_RangingMeasurementData_t measure;
 VL53L0X_Error status;
 VL53L0X_Measurement_Mode measurement_profile;
-uint8_t custom_profile_settings[9]; //For custom measurement profiles
+uint8_t custom_profile_settings[CUSTOM_PROFILE_SETTINGS_SIZE]; //For custom measurement profiles
 
 uint16_t filtered_distance;
 uint16_t real_distance;
@@ -556,6 +558,11 @@ static void read_default_settings()
     {
         /* Populate factory settings */
         set_settings(settings_buffer);
+
+		/* Populate custom measurement profile settings */
+		FLASH_0_read_eeprom_block(EEPROM_CUSTOM_PROFILE_SETINGS, settings_buffer, CUSTOM_PROFILE_SETTINGS_SIZE);
+
+		memcpy(&custom_profile_settings[0], &settings_buffer[0], CUSTOM_PROFILE_SETTINGS_SIZE * sizeof(uint8_t));
     }
 }
 
@@ -661,6 +668,7 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             {
                 FLASH_0_write_eeprom_block(EEPROM_USER_SETTINGS_START, settings_buffer, SETTINGS_SIZE + 1);
                 FLASH_0_write_eeprom_block(EEPROM_DEVICE_NAME, mappydot_name, 16);
+				FLASH_0_write_eeprom_block(EEPROM_CUSTOM_PROFILE_SETINGS, custom_profile_settings, CUSTOM_PROFILE_SETTINGS_SIZE);
             }
 
             else
@@ -904,11 +912,11 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 				}
     }
 
-	else if (arg_length == 9)
+	else if (arg_length == CUSTOM_PROFILE_SETTINGS_SIZE)
 	{
 		if (command == CUSTOM_PROFILE)
 		{
-			memcpy(custom_profile_settings, arg, 9);
+			memcpy(custom_profile_settings, arg, CUSTOM_PROFILE_SETTINGS_SIZE);
 		}
 	}
 
@@ -975,19 +983,6 @@ static void get_settings_buffer(uint8_t * buffer, bool store_settings)
 		buffer[27] = (xTalkCompensationRateMegaCps >> 8 ) & 0xff;
 		buffer[28] = (xTalkCompensationRateMegaCps      ) & 0xff;
 
-		/* Custom measurement profile settings */
-	    memcpy(&buffer[29], &custom_profile_settings[0], 9 * sizeof( uint8_t ));
-
-		//Same as :
-		/*buffer[29] = custom_profile_settings[0];
-		buffer[30] = custom_profile_settings[1];
-		buffer[31] = custom_profile_settings[2];
-		buffer[32] = custom_profile_settings[3];
-		buffer[33] = custom_profile_settings[4];
-		buffer[34] = custom_profile_settings[5];
-		buffer[35] = custom_profile_settings[6];
-		buffer[36] = custom_profile_settings[7];
-		buffer[37] = custom_profile_settings[8];*/
 	}
 }
 
@@ -1032,19 +1027,6 @@ static void set_settings(uint8_t * buffer)
 	/* Crosstalk (cover) Calibration */
 	xTalkCompensationRateMegaCps = (uint32_t)buffer[25] << 24 | (uint32_t)buffer[26] << 16 | (uint32_t)buffer[27] << 8 | buffer[28];
 	
-	/* Custom measurement profile settings */
-	memcpy(&custom_profile_settings[0], &buffer[29], 9 * sizeof(uint8_t));
-
-	//Same as :
-	/*custom_profile_settings[0] = buffer[29];
-	custom_profile_settings[1] = buffer[30];
-	custom_profile_settings[2] = buffer[31];
-	custom_profile_settings[3] = buffer[32];
-	custom_profile_settings[4] = buffer[33];
-	custom_profile_settings[5] = buffer[34];
-	custom_profile_settings[6] = buffer[35];
-	custom_profile_settings[7] = buffer[36];
-	custom_profile_settings[8] = buffer[37];*/
 }
 
 /**
