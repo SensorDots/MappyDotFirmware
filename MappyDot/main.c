@@ -276,6 +276,11 @@ int main(void)
 
     /* Read device name (this can be bad, we just get the user to reprogram) */
     FLASH_0_read_eeprom_block(EEPROM_DEVICE_NAME,mappydot_name, 16);
+
+	/* Populate custom measurement profile settings */
+	FLASH_0_read_eeprom_block(EEPROM_CUSTOM_PROFILE_SETINGS, settings_buffer, CUSTOM_PROFILE_SETTINGS_SIZE);
+
+	memcpy(&custom_profile_settings[0], &settings_buffer[0], CUSTOM_PROFILE_SETTINGS_SIZE * sizeof(uint8_t));
 	
 
 	#ifdef FILL_SRAM_DEBUG
@@ -558,11 +563,6 @@ static void read_default_settings()
     {
         /* Populate factory settings */
         set_settings(settings_buffer);
-
-		/* Populate custom measurement profile settings */
-		FLASH_0_read_eeprom_block(EEPROM_CUSTOM_PROFILE_SETINGS, settings_buffer, CUSTOM_PROFILE_SETTINGS_SIZE);
-
-		memcpy(&custom_profile_settings[0], &settings_buffer[0], CUSTOM_PROFILE_SETTINGS_SIZE * sizeof(uint8_t));
     }
 }
 
