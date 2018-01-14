@@ -42,9 +42,7 @@
 
 #include <atmel_start.h>
 #include <avr/wdt.h>
-#include <math.h>
 #include <string.h>
-#include <util/delay.h>
 #include "vl53l0x.h"
 #include "addr.h"
 #include "i2c_slave.h"
@@ -58,12 +56,15 @@
 #include "vl53l0x_types.h"
 #include "main.h"
 #include "sleeping.h"
+#include "vl53l0x_profiles.h"
+#include "helper.h" //Main helper function
+
 
 #ifdef DEV_DISABLE
 #warning Some functions are disabled with DEV_DISABLE
 #endif
 
-#define VERSION_STRING                "MD_FW_V1.1"
+#define VERSION_STRING                "MD_FW_V1.2"
 
 #define EEPROM_BOOTLOADER_BYTE        0x02
 #define EEPROM_ADDRESS_BYTE           0x01
@@ -73,7 +74,7 @@
 #define FILTER_ORDER                  2  //Filter order
 #define SAMPLING_FREQ                 30 //Samples per second
 #define FILTER_FREQUENCY              6  //Hz
-#define SETTINGS_SIZE                 29 // first byte is 0
+#define SETTINGS_SIZE                 38 // first byte is 0
 #define MIN_DIST                      30 //minimum distance from VL53L0X
 #define MAX_DIST                      4000 //Max sanity distance from VL53L0X
 #define ACCURACY_LIMIT                1200
@@ -83,13 +84,6 @@
 static void get_settings_buffer(uint8_t * buffer, bool stored_settings);
 static void set_settings(uint8_t * buffer);
 static void read_default_settings();
-#ifndef DEV_DISABLE
-static uint16_t avg(uint16_t * array, uint8_t count);
-#endif
-static void flash_led(uint32_t timeout_ms, int8_t num_of_flashes, bool pwm);
-static uint8_t translate_measurement_mode(uint8_t measurement_mode);
-static uint8_t translate_ranging_mode(uint8_t ranging_mode);
-static void delay_ms(uint16_t ms);
 static void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length);
 
 
@@ -105,6 +99,8 @@ VL53L0X_Dev_t device;
 VL53L0X_Dev_t * pDevice;
 VL53L0X_RangingMeasurementData_t measure;
 VL53L0X_Error status;
+VL53L0X_Measurement_Mode measurement_profile;
+uint8_t custom_profile_settings[9]; //For custom measurement profiles
 
 uint16_t filtered_distance;
 uint16_t real_distance;
@@ -289,7 +285,9 @@ int main(void)
 	/* Assign struct to pointer */
 	pDevice = &device;
 
-	if (!init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), translate_measurement_mode(current_measurement_mode),
+	translate_measurement_mode(current_measurement_mode, &measurement_profile, custom_profile_settings);
+
+	if (!init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), &measurement_profile,
 					  refSpadCount,ApertureSpads,offsetMicroMeter,xTalkCompensationRateMegaCps,vhvSettings,phaseCal))
 	{
 		/* Ops we had an init failure */
@@ -377,6 +375,7 @@ int main(void)
 				readRange(pDevice, &status, &measure);
 
 				error_code = measure.RangeStatus;
+				
 				/* If not phase error */
 				if (measure.RangeStatus != 4)
 				{
@@ -527,69 +526,6 @@ int main(void)
 	}
 }
 
-/**
- * \brief _delay_ms helper function
- * 
- * \param ms
- * 
- * \return void
- */
-void delay_ms(uint16_t ms)
-{
-	while (0 < ms)
-	{
-		_delay_ms(1);
-		--ms;
-	}
-}
-
-
-/**
- * \brief Flash LED
- * 
- * \param flash_ms between state chances, double this value for the period
- * \param num_of_flashes (-1 for indefinite)
- * 
- * \return void
- */
-static void flash_led(uint32_t timeout_ms, int8_t num_of_flashes, bool pwm)
-{
-    /* Turn off LED */
-    LED_set_level(true);
-
-	delay_ms(timeout_ms);
-
-	//Can only breath in indefinite mode
-    if (pwm && num_of_flashes == -1)
-	{
-		uint8_t i = 0;
-		TIMER_1_init();
-
-		while (1)
-		{	
-			if (i >= 99) i = 0;
-			TIMER_1_set_duty(i);
-			delay_ms(timeout_ms);
-			i++;
-		}
-		
-	}
-	while (abs(num_of_flashes) > 0)
-    {
-	    delay_ms(timeout_ms);
-
-		/* Turn on LED */
-		LED_set_level(false);
-
-		delay_ms(timeout_ms);
-
-		/* Turn off LED */
-		LED_set_level(true);
-
-		/* Never decrement if -1 */
-		if (num_of_flashes > 0) num_of_flashes--;
-    }
-}
 
 /**
  * \brief Reads the factory default settings from EEPROM
@@ -624,45 +560,6 @@ static void read_default_settings()
 }
 
 /**
- * \brief Translates the human readable measurement mode to API mode.
- * 
- * \param measurement_mode
- * 
- * \return uint8_t
- */
-static uint8_t translate_measurement_mode(uint8_t measurement_mode)
-{
-    if (measurement_mode == HIGHLY_ACCURATE) return 0;
-
-    if (measurement_mode == LONG_RANGE) return 1;
-
-    if (measurement_mode == HIGH_SPEED) return 2;
-
-	//This gets set by default in this method. So don't bother checking.
-    //if (measurement_mode == VL53L0X_DEFAULT) return 3;
-
-	//We auto switch this range
-    //if (measurement_mode == MAPPYDOT_MODE) return 3;
-
-	return 3;
-}
-
-/**
- * \brief Translates the ranging mode for API mode
- * 
- * \param ranging_mode
- * 
- * \return uint8_t
- */
-static uint8_t translate_ranging_mode(uint8_t ranging_mode)
-{
-    if (ranging_mode == SET_CONTINUOUS_RANGING_MODE) return 1;
-
-	//if (ranging_mode == SET_SINGLE_RANGING_MODE) //Set by default
-	return 0;
-}
-
-/**
  * \brief Resets the VL53L0X ranging system. We do this here, because we control the XSHUT pin
  * 
  * 
@@ -680,9 +577,9 @@ static void reset_vl53l0x_ranging()
 	XSHUT_set_level(true);
 
 	/* Boot time */
-	_delay_ms(T_BOOT_MS);
+	delay_ms(T_BOOT_MS);
 
-    init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), translate_measurement_mode(current_measurement_mode),
+    init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), &measurement_profile,
 			        refSpadCount,ApertureSpads,offsetMicroMeter,xTalkCompensationRateMegaCps,vhvSettings,phaseCal);
 }
 
@@ -739,9 +636,9 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 		    /* Set XSHUT to high to turn on (Shutdown is active low). */
 		    XSHUT_set_level(true);
 			
-			_delay_ms(T_BOOT_MS);
+			delay_ms(T_BOOT_MS);
 
-			init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), translate_measurement_mode(current_measurement_mode),
+			init_ranging(pDevice, &status, translate_ranging_mode(current_ranging_mode), &measurement_profile,
 			refSpadCount,ApertureSpads,offsetMicroMeter,xTalkCompensationRateMegaCps,vhvSettings,phaseCal);
             //vl53l0xStartup(device, status);
             vl53l0x_powerstate = 1;
@@ -931,7 +828,8 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			//Set to single ranging mode (stop measurement)
 	        setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
 			//Change to selected measurement mode
-            setRangingMeasurementMode(pDevice, &status, translate_measurement_mode(current_measurement_mode));
+			translate_measurement_mode(current_measurement_mode, &measurement_profile, custom_profile_settings);
+            setRangingMeasurementMode(pDevice, &status, &measurement_profile);
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
 
@@ -1006,6 +904,14 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 				}
     }
 
+	else if (arg_length == 9)
+	{
+		if (command == CUSTOM_PROFILE)
+		{
+			memcpy(custom_profile_settings, arg, 9);
+		}
+	}
+
     else if (arg_length == 16)
     {
         if (command == NAME_DEVICE)
@@ -1013,43 +919,24 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             memcpy(mappydot_name, arg, 16);
         }
     }
-}
 
 
-/**
- * \brief Average function
- * 
- * \param array
- * \param count
- * 
- * \return uint16_t
- */
-uint16_t avg(uint16_t * array, uint8_t count)
-{
-	uint16_t sum = 0;
-
-	for(uint8_t i = 0; i < count; i++)
-	{
-		sum += array[i];
-	}
-
-	return sum / count;
 }
 
 /**
  * \brief 
  * 
- * \param buffer - Must have buffer of size 15 (no check to save code space)
- * \param stored_settings
+ * \param buffer - Must have buffer of size = SETTINGS_SIZE
+ * \param store_settings - are we storing settings (true) in eeprom or using it for display (false)
  * 
  * \return void
  */
-static void get_settings_buffer(uint8_t * buffer, bool stored_settings)
+static void get_settings_buffer(uint8_t * buffer, bool store_settings)
 {
     uint8_t tmp_buffer[2];
 
     //ignore this if storing settings as it's irrelevant. We do this to save code space, rather than making a special case for it
-    if (!stored_settings) buffer[0] = (device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds * 100) & 0xff;
+    if (!store_settings) buffer[0] = (device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds * 100) & 0xff;
 
     buffer[1] = current_ranging_mode;
     buffer[2] = current_measurement_mode;
@@ -1068,7 +955,7 @@ static void get_settings_buffer(uint8_t * buffer, bool stored_settings)
     buffer[13] = intersensor_crosstalk_delay;
 	buffer[14] = intersensor_crosstalk_timeout;
     buffer[15] = vl53l0x_powerstate;
-    if (stored_settings) { 
+    if (store_settings) { 
 	    /* SPAD Calibration */
 	    buffer[16] = (refSpadCount >> 24) & 0xff; 
         buffer[17] = (refSpadCount >> 16) & 0xff;
@@ -1088,6 +975,19 @@ static void get_settings_buffer(uint8_t * buffer, bool stored_settings)
 		buffer[27] = (xTalkCompensationRateMegaCps >> 8 ) & 0xff;
 		buffer[28] = (xTalkCompensationRateMegaCps      ) & 0xff;
 
+		/* Custom measurement profile settings */
+	    memcpy(&buffer[29], &custom_profile_settings[0], 9 * sizeof( uint8_t ));
+
+		//Same as :
+		/*buffer[29] = custom_profile_settings[0];
+		buffer[30] = custom_profile_settings[1];
+		buffer[31] = custom_profile_settings[2];
+		buffer[32] = custom_profile_settings[3];
+		buffer[33] = custom_profile_settings[4];
+		buffer[34] = custom_profile_settings[5];
+		buffer[35] = custom_profile_settings[6];
+		buffer[36] = custom_profile_settings[7];
+		buffer[37] = custom_profile_settings[8];*/
 	}
 }
 
@@ -1131,6 +1031,20 @@ static void set_settings(uint8_t * buffer)
 
 	/* Crosstalk (cover) Calibration */
 	xTalkCompensationRateMegaCps = (uint32_t)buffer[25] << 24 | (uint32_t)buffer[26] << 16 | (uint32_t)buffer[27] << 8 | buffer[28];
+	
+	/* Custom measurement profile settings */
+	memcpy(&custom_profile_settings[0], &buffer[29], 9 * sizeof(uint8_t));
+
+	//Same as :
+	/*custom_profile_settings[0] = buffer[29];
+	custom_profile_settings[1] = buffer[30];
+	custom_profile_settings[2] = buffer[31];
+	custom_profile_settings[3] = buffer[32];
+	custom_profile_settings[4] = buffer[33];
+	custom_profile_settings[5] = buffer[34];
+	custom_profile_settings[6] = buffer[35];
+	custom_profile_settings[7] = buffer[36];
+	custom_profile_settings[8] = buffer[37];*/
 }
 
 /**
@@ -1207,48 +1121,9 @@ ISR (PCINT0_vect)
 }
 
 
-/* GPIO PWM Timer (TIMER_0) */
-/* "Start" of the PWM signal. While COMPA resets after interrupt,
- * we can never get full off with this because there is always time.
- * until the next interrupt fire */
-ISR(TIMER1_COMPA_vect)
-
-{
-    SYNC_set_level(true);
-}
-
-/* Duty Cycle point */
-ISR(TIMER1_COMPB_vect)
-{
-    SYNC_set_level(false); 
-}
-
-/* LED PWM Timer (TIMER_1) */
-ISR(TIMER3_COMPA_vect)
-{
-    /* Turn on LED */
-    LED_set_level(false);
-
-}
-
-/* Duty Cycle point */
-ISR(TIMER3_COMPB_vect)
-{
-    /* Turn off LED */
-    LED_set_level(true);
-
-}
-
 /* No interrupt overflow (this will fire every ~500ms if no interrupt arrived) */
 ISR(TIMER4_OVF_vect)
 {
     interrupt_timeout_interrupt_fired = true;
 }
 
-/* Debugging purposes */
-ISR(BADISR_vect)
-{
-    /* Turn on LED */
-	//LED_set_level(true);
-	asm("nop;");
-}

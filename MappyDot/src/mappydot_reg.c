@@ -43,6 +43,8 @@ uint8_t check_command_size(uint8_t command)
 
     if (command == REBOOT_TO_BOOTLOADER)                    return 1;
 
+	if (command == CUSTOM_PROFILE)                          return 9;
+
     return 0;
 }
 

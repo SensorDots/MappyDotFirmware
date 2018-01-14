@@ -20,12 +20,13 @@
 
 #include "vl53l0x_api.h"
 #include <stdbool.h>
+#include "vl53l0x_profiles.h"
 
 /* VL53L0X Address (8bit) */
 /* Note the i2c libraries will modify the last bit (LSB) for read/write */
 #define VL53L0X_I2C_ADDR  0x52
 
-bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t ranging_mode, uint8_t measurement_mode,
+bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t ranging_mode, VL53L0X_Measurement_Mode * measurement_mode,
 uint32_t refSpadCount, uint8_t ApertureSpads, int32_t offsetMicroMeter,
 FixPoint1616_t xTalkCompensationRateMegaCps, uint8_t vhvSettings, uint8_t phaseCal);
 
@@ -34,7 +35,7 @@ VL53L0X_Error startSingleRangingMeasurement(VL53L0X_Dev_t * device, VL53L0X_Erro
 uint16_t resetVl53l0xInterrupt(VL53L0X_Dev_t * device, VL53L0X_Error * status);
 uint16_t readRange(VL53L0X_Dev_t * device, VL53L0X_Error * status, VL53L0X_RangingMeasurementData_t *RangingMeasurementData );
 void stopContinuous(VL53L0X_Dev_t * device, VL53L0X_Error * status);
-uint16_t setRangingMeasurementMode(VL53L0X_Dev_t * device, VL53L0X_Error * status,uint8_t mode);
+uint16_t setRangingMeasurementMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, VL53L0X_Measurement_Mode *measurement_mode);
 void setRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t mode);
 
 uint8_t calibrateSPAD(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint32_t * refSpadCount, uint8_t * ApertureSpads);

@@ -69,6 +69,7 @@
 
 /* Super Advanced */
 #define ENTER_FACTORY_MODE                          (0x23) //"#"//"!#!#!#"
+#define CUSTOM_PROFILE                              (0x6b)
 
 /* Ranging Modes */
 #define HIGHLY_ACCURATE                             (0x68)
@@ -76,6 +77,7 @@
 #define HIGH_SPEED                                  (0x73)
 #define VL53L0X_DEFAULT                             (0x64)
 #define MAPPYDOT_MODE                               (0x6d)
+#define CUSTOM                                      (0x63)
 
 /* LED Modes */
 #define LED_ON                                      (0x6f)

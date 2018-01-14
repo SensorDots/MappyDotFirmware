@@ -22,6 +22,7 @@
 #include "vl53l0x_i2c_platform.h"
 #include "vl53l0x_api.h"
 #include "tc16.h"
+#include "vl53l0x_profiles.h"
 
 void startContinuous(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint32_t period_ms);
 uint16_t setSingleRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status);
@@ -42,7 +43,7 @@ uint16_t setSingleRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status);
  * 
  * \return bool
  */
-bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t ranging_mode, uint8_t measurement_mode,
+bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t ranging_mode, VL53L0X_Measurement_Mode * measurement_mode,
                   uint32_t refSpadCount, uint8_t ApertureSpads, int32_t offsetMicroMeter, 
 				  FixPoint1616_t xTalkCompensationRateMegaCps, uint8_t vhvSettings, uint8_t phaseCal)
 {
@@ -180,7 +181,7 @@ void setRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t mode
 }
 
 /**
- * \brief Sets the measurement mode type
+ * \brief Sets the measurement mode parameters
  * 
  * \param device
  * \param status
@@ -188,58 +189,22 @@ void setRangingMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t mode
  * 
  * \return uint16_t
  */
-uint16_t setRangingMeasurementMode(VL53L0X_Dev_t * device, VL53L0X_Error * status,uint8_t rangingMode)
+
+uint16_t setRangingMeasurementMode(VL53L0X_Dev_t * device, VL53L0X_Error * status, VL53L0X_Measurement_Mode * measurement_mode)
 {
 	//Defaults not in API - VL53L0X_VCSEL_PERIOD_PRE_RANGE 14 VL53L0X_VCSEL_PERIOD_FINAL_RANGE 10
 	/* uint8_t test;
 	VL53L0X_GetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, &test);
 	VL53L0X_GetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, &test);*/
     
-    /* High accuracy */
-    if (rangingMode == 0)
-	{
-	    VL53L0X_SetLimitCheckEnable(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
-	    VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t)(0.25*65536));
-	    VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t)(18*65536));
-	    VL53L0X_SetMeasurementTimingBudgetMicroSeconds(device, 200000); //5Hz
-		VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
-	    VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
-	}
-
-	/* Long Range */
-	if (rangingMode == 1)
-	{
-	    VL53L0X_SetLimitCheckEnable(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
-		VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t)(0.1*65536));
-		VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t)(60*65536));
-		VL53L0X_SetMeasurementTimingBudgetMicroSeconds(device, 33000); //30Hz
-		VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, 18);
-		VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 14);
-	}
-
-	/* High Speed */
-	if (rangingMode == 2)
-	{
-	    VL53L0X_SetLimitCheckEnable(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
-		VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t)(0.25*65536));
-		VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t)(32*65536));
-		VL53L0X_SetMeasurementTimingBudgetMicroSeconds(device, 20000+1600); //50Hz (give/fudge a little extra time/accuracy to get 50Hz as it runs a bit fast; around 55Hz)
-		VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
-	    VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
-	}
-
-	/* Default */
-	if (rangingMode == 3)
-	{
-    	/* Signal rate minimum threshold. Measurements with signal rates below this value are ignored. Disabled by default */
-    	VL53L0X_SetLimitCheckEnable(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 1);
-    	VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, (FixPoint1616_t)(1.5*0.023*65536));
-		VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t)(0.25*65536));
-	    VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t)(18*65536));
-    	VL53L0X_SetMeasurementTimingBudgetMicroSeconds(device, 33000); //30Hz
-		VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
-	    VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
-	}
+    /* Signal rate minimum threshold. Measurements with signal rates below this value are ignored. Disabled by default */
+    VL53L0X_SetLimitCheckEnable(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, measurement_mode->range_ignore_threshold);
+	if (measurement_mode->range_ignore_threshold != 0) VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, (FixPoint1616_t)measurement_mode->range_ignore_threshold_value);
+	VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t)measurement_mode->signal_rate_final_range);
+	VL53L0X_SetLimitCheckValue(device, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t)measurement_mode->sigma_final_range);
+    VL53L0X_SetMeasurementTimingBudgetMicroSeconds(device, measurement_mode->timing_budget_ms); //30Hz
+	VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_PRE_RANGE, measurement_mode->vcsel_period_pre_range);
+	VL53L0X_SetVcselPulsePeriod(device, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, measurement_mode->vscel_period_final_range);
 
 	return 0;
 }

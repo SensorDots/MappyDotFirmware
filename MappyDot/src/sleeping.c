@@ -26,8 +26,7 @@ void disable_analog()
 }
 
 void sleep_avr()
-{
-    
+{  
     // Choose sleep mode:
     set_sleep_mode(SLEEP_MODE_IDLE);
     

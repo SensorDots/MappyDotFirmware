@@ -2659,7 +2659,7 @@ VL53L0X_Error VL53L0X_SetGpioConfig(VL53L0X_DEV Dev, uint8_t Pin,
 
 	LOG_FUNCTION_START("");
 
-	if (Pin != 0) {
+	/*if (Pin != 0) {
 		Status = VL53L0X_ERROR_GPIO_NOT_EXISTING;
 	} else if (DeviceMode == VL53L0X_DEVICEMODE_GPIO_DRIVE) {
 		if (Polarity == VL53L0X_INTERRUPTPOLARITY_LOW)
@@ -2694,13 +2694,13 @@ VL53L0X_Error VL53L0X_SetGpioConfig(VL53L0X_DEV Dev, uint8_t Pin,
 		Status |= VL53L0X_WrByte(Dev, 0x00, 0x00);
 
 	} else {
-
+	*/
 		if (Status == VL53L0X_ERROR_NONE) {
 			switch (Functionality) {
 			case VL53L0X_GPIOFUNCTIONALITY_OFF:
 				data = 0x00;
 				break;
-			case VL53L0X_GPIOFUNCTIONALITY_THRESHOLD_CROSSED_LOW:
+			/*case VL53L0X_GPIOFUNCTIONALITY_THRESHOLD_CROSSED_LOW:
 				data = 0x01;
 				break;
 			case VL53L0X_GPIOFUNCTIONALITY_THRESHOLD_CROSSED_HIGH:
@@ -2708,7 +2708,7 @@ VL53L0X_Error VL53L0X_SetGpioConfig(VL53L0X_DEV Dev, uint8_t Pin,
 				break;
 			case VL53L0X_GPIOFUNCTIONALITY_THRESHOLD_CROSSED_OUT:
 				data = 0x03;
-				break;
+				break;*/
 			case VL53L0X_GPIOFUNCTIONALITY_NEW_MEASURE_READY:
 				data = 0x04;
 				break;
@@ -2739,7 +2739,7 @@ VL53L0X_Error VL53L0X_SetGpioConfig(VL53L0X_DEV Dev, uint8_t Pin,
 		if (Status == VL53L0X_ERROR_NONE)
 			Status = VL53L0X_ClearInterruptMask(Dev, 0);
 
-	}
+	//}
 
 	LOG_FUNCTION_END(Status);
 	return Status;

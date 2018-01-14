@@ -275,6 +275,9 @@ REM ################
     <Compile Include="include\i2c_slave.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\helper.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\mappydot_reg.h">
       <SubType>compile</SubType>
     </Compile>
@@ -300,6 +303,9 @@ REM ################
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\twi.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="include\vl53l0x_profiles.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
@@ -333,6 +339,9 @@ REM ################
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\i2c_slave.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\helper.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\mappydot_reg.c">
