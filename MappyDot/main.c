@@ -16,15 +16,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   Features Not Currently Implemented
-
-   - I2C Passthrough Mode
-   - MappyDot Mode
-   - Set as master for inter-device crosstalk. This allows you to group devices.
-   - Add Initisation Error Codes
-   - Assign new start address to master and assign master in firmware.
-   - Custom profiles
-
    ATmega328pb:
    Fuse E: 0xfd (2.7V BOD)
    Fuse H: 0xd4 (512 words bootloader)
@@ -64,7 +55,7 @@
 #warning Some functions are disabled with DEV_DISABLE
 #endif
 
-#define VERSION_STRING                "MD_FW_V1.2"
+#define VERSION_STRING                "MD_FW_V1.3"
 
 #define EEPROM_BOOTLOADER_BYTE        0x02
 #define EEPROM_ADDRESS_BYTE           0x01
@@ -87,6 +78,7 @@ static void get_settings_buffer(uint8_t * buffer, bool stored_settings);
 static void set_settings(uint8_t * buffer);
 static void read_default_settings();
 static void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length);
+static void store_current_address_eeprom();
 
 
 /* State Variables */
@@ -115,7 +107,6 @@ volatile bool averaging_enabled  = 0;
 volatile bool factory_mode       = 0;
 volatile bool crosstalk_enabled  = 0;
 volatile bool vl53l0x_powerstate = 0;
-volatile bool passthrough_mode   = 0;
 volatile bool is_master          = 0;
 
 volatile uint8_t led_mode                      = LED_PWM_ENABLED;
@@ -164,7 +155,7 @@ int main(void)
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
 
-	/* Disables analog comparartor to save power */
+	/* Disables analog comparator to save power */
     disable_analog();
 
     /* Set XSHUT to high to turn on (Shutdown is active low). */
@@ -188,7 +179,20 @@ int main(void)
         slave_address = addr_init(is_master);
 
 		/* Try again once more */
-		if (slave_address == -1) slave_address = addr_init(is_master);
+		//if (slave_address == -1) slave_address = addr_init(is_master);
+
+		/* Pull address from eeprom if we failed to get address.
+		   If no or incorrect address is stored and will still trigger addressing failure. */
+		if (slave_address == -1) {
+
+		    slave_address = FLASH_0_read_eeprom_byte(EEPROM_ADDRESS_BYTE);
+
+			//Don't allow it to auto recover master address (START_ADDRESS)
+			if (slave_address <= START_ADDRESS || slave_address > END_ADDRESS) slave_address = -1;
+
+			/* Flash LED Code every 1000ms 4 times */
+			flash_led(500, 4, 0);
+		}
     }
 
     else
@@ -204,10 +208,13 @@ int main(void)
         flash_led(500,-1, 0);
     }
 
-    else if (slave_address >= START_ADDRESS && slave_address < END_ADDRESS)
+    else if (slave_address >= START_ADDRESS && slave_address <= END_ADDRESS)
     {
         /* I2C Slave Init */
         i2c_slave_init(slave_address);
+
+		/* Write address to EEPROM for recovery of address on fail */
+		store_current_address_eeprom();
     }
     else
     {
@@ -609,6 +616,21 @@ void main_process_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 }
 
 /**
+ * \brief Stores the current address to EEPROM
+ * 
+ * \return void
+ */
+void store_current_address_eeprom()
+{
+    /* Only store if stored address is different to current address */
+    if (FLASH_0_read_eeprom_byte(EEPROM_ADDRESS_BYTE) != slave_address)
+	{
+		/* Store current slave address in eeprom */
+		FLASH_0_write_eeprom_byte(EEPROM_ADDRESS_BYTE, slave_address);
+	}
+}
+
+/**
  * \brief handle command in main to exit out of interrupt ASAP
  * 
  * \param command
@@ -656,8 +678,6 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 			reset_vl53l0x_ranging();
         }
 
-		else if (command == VL53L0X_PASSTHROUGH) passthrough_mode = 1;
-
         else if (command == WRITE_CURRENT_SETTINGS_AS_START_UP_DEFAULT)
         {
             get_settings_buffer(settings_buffer, true);
@@ -666,6 +686,7 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             settings_buffer[SETTINGS_SIZE] = Crc8(settings_buffer, SETTINGS_SIZE);
             if (!factory_mode)
             {
+			    //TODO: check crc first and only write when changes are detected.
                 FLASH_0_write_eeprom_block(EEPROM_USER_SETTINGS_START, settings_buffer, SETTINGS_SIZE + 1);
                 FLASH_0_write_eeprom_block(EEPROM_DEVICE_NAME, mappydot_name, 16);
 				FLASH_0_write_eeprom_block(EEPROM_CUSTOM_PROFILE_SETINGS, custom_profile_settings, CUSTOM_PROFILE_SETTINGS_SIZE);
@@ -768,7 +789,8 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
         if (command == REBOOT_TO_BOOTLOADER && arg[0] == 0x00)
         {
             //store current slave address in eeprom
-            FLASH_0_write_eeprom_byte(EEPROM_ADDRESS_BYTE,slave_address);
+            store_current_address_eeprom();
+
             //set bootloader bit
             FLASH_0_write_eeprom_byte(EEPROM_BOOTLOADER_BYTE,0x01);
             cli(); //irq's off

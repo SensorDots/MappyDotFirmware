@@ -65,7 +65,6 @@
 #define VL53L0X_NOT_SHUTDOWN                        (0x48)
 #define VL53L0X_SHUTDOWN                            (0x68)
 #define READ_NONFILTERED_VALUE                      (0x6a)
-#define VL53L0X_PASSTHROUGH                         (0x70)
 
 /* Super Advanced */
 #define ENTER_FACTORY_MODE                          (0x23) //"#"//"!#!#!#"

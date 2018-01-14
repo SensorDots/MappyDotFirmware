@@ -13,9 +13,9 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.0 (11/09/2017) - Release firmware. 
    - MD_FW_V1.1 (29/10/2017) - Added IDLE sleep to save ~2-5mA and some small bug fixes. 
    - MD_FW_V1.2 (14/01/2018) - Added custom measurement mode profile setting and saving (new documentation also added to https://sensordots.org/mappydotreg). Cleanup of code and API functions. Tweaks to profile setting code to support the custom measurement profiles.
+   - MD_FW_V1.3 (15/01/2018) - Implemented auto address recovery and sped up init routine. Auto address recovery will initialise with the previous auto address if auto addressing fails on startup. This will only recover addresses that were obtained through auto addressing (i.e. not the master address of 0x08). This is useful if some devices reboot during operation due to power supply glitches or disconnection.
    
 ## Features Under Development
-   - Recover previous I2C address after reset if address initialisation failed (also don't store new value if not changed in EEPROM).
    - Watchdog timer.
    - MappyDot Mode.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
