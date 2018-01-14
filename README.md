@@ -14,7 +14,7 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.1 (29/10/2017) - Added IDLE sleep to save ~2-5mA and some small bug fixes. 
    - MD_FW_V1.2 (14/01/2018) - Added custom measurement mode profile setting and saving (new documentation also added to https://sensordots.org/mappydotreg). Cleanup of code and API functions. Tweaks to profile setting code to support the custom measurement profiles.
    
-## Features Currently Being Developed
+## Features Currently Being Developed/Tested
    - Recover previous I2C address after reset if address initialisation failed (also don't store new value if not changed in EEPROM).
    - Watchdog timer.
    - MappyDot Mode.
