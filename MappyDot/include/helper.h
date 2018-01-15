@@ -32,5 +32,6 @@ uint16_t avg(uint16_t * array, uint8_t count);
 #endif
 void translate_measurement_mode(uint8_t measurement_mode, VL53L0X_Measurement_Mode *mode_settings, uint8_t * custom_profile_settings);
 uint8_t translate_ranging_mode(uint8_t ranging_mode);
+void store_current_address_eeprom(uint8_t eeprom_address, uint8_t slave_address);
 
 #endif /* HELPER_H_ */

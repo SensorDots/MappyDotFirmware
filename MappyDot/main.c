@@ -27,7 +27,11 @@
    disable some functions or disable the bootloader and BOOTRST. 
    Some non critical functions can be disabled with the DEV_DISABLE 
    compiler flag.
-   Compiled size needs to be under 7C00 bytes to work with bootloader 
+   Compiled size needs to be under 7C00 bytes to work with bootloader.
+
+   NO_INT compile flag is used to test the VL53L0X without the interupt
+   pin. This should not be used under normal circumstances. This is for
+   debugging purposes only.
 
  */
 
@@ -78,7 +82,6 @@ static void get_settings_buffer(uint8_t * buffer, bool stored_settings);
 static void set_settings(uint8_t * buffer);
 static void read_default_settings();
 static void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length);
-static void store_current_address_eeprom();
 
 
 /* State Variables */
@@ -214,7 +217,7 @@ int main(void)
         i2c_slave_init(slave_address);
 
 		/* Write address to EEPROM for recovery of address on fail */
-		store_current_address_eeprom();
+		store_current_address_eeprom(EEPROM_ADDRESS_BYTE, slave_address);
     }
     else
     {
@@ -322,12 +325,20 @@ int main(void)
 	static uint8_t led_duty_cycle = 0;
     static uint8_t gpio_duty_cycle = 0;
 
+	#ifdef NO_INT
+	uint32_t no_interrupt_counter = 0;
+	#else
 	/* Start no interrupt timer */
 	if (current_ranging_mode == SET_CONTINUOUS_RANGING_MODE) TIMER_2_init();
+	#endif
+
 
     /* Main code */
     while (1)
     {
+	    #ifdef NO_INT
+	    no_interrupt_counter++; //TODO check speed of this, we should be running at about 50Hz all the time.
+		#endif
 	    if (!calibrating)
 		{	
 		    /* Put the microcontroller to sleep
@@ -361,9 +372,15 @@ int main(void)
 				}
 			}
 
-
+			#ifdef NO_INT
+			#warning NO_INT set.
+			if (no_interrupt_counter > 38) //runs at about 52Hz, this doesn't have to be accurate.
+			{
+				no_interrupt_counter = 0;
+			#else 
 			if (measurement_interrupt_fired)
 			{
+			#endif
 				/* We can do a fair bit of work here once the ranging has complete, 
 				* because the VL53L0X is now busy getting another range ready. */
 
@@ -616,21 +633,6 @@ void main_process_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
 }
 
 /**
- * \brief Stores the current address to EEPROM
- * 
- * \return void
- */
-void store_current_address_eeprom()
-{
-    /* Only store if stored address is different to current address */
-    if (FLASH_0_read_eeprom_byte(EEPROM_ADDRESS_BYTE) != slave_address)
-	{
-		/* Store current slave address in eeprom */
-		FLASH_0_write_eeprom_byte(EEPROM_ADDRESS_BYTE, slave_address);
-	}
-}
-
-/**
  * \brief handle command in main to exit out of interrupt ASAP
  * 
  * \param command
@@ -789,7 +791,7 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
         if (command == REBOOT_TO_BOOTLOADER && arg[0] == 0x00)
         {
             //store current slave address in eeprom
-            store_current_address_eeprom();
+            store_current_address_eeprom(EEPROM_ADDRESS_BYTE, slave_address);
 
             //set bootloader bit
             FLASH_0_write_eeprom_byte(EEPROM_BOOTLOADER_BYTE,0x01);
@@ -1106,6 +1108,7 @@ uint8_t main_process_tx_command(uint8_t command, uint8_t * tx_buffer)
     return 0;
 }
 
+#ifndef NO_INT
 /* Measurement Interrupt Fired */
 ISR (PCINT1_vect)
 {
@@ -1114,6 +1117,7 @@ ISR (PCINT1_vect)
         measurement_interrupt_fired = true;
     }
 }
+#endif
 
 /* Crosstalk interrupt fired */
 ISR (PCINT0_vect)

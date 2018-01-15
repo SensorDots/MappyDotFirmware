@@ -27,6 +27,7 @@
 #include "mappydot_reg.h"
 #include "vl53l0x_types.h"
 #include "vl53l0x_profiles.h"
+#include "nvmctrl.h"
 
 /**
  * \brief _delay_ms helper function
@@ -41,6 +42,23 @@ void delay_ms(uint16_t ms)
 	{
 		_delay_ms(1);
 		--ms;
+	}
+}
+
+/**
+ * \brief Stores the current address to EEPROM
+ *
+ * \param slave_address
+ *
+ * \return void
+ */
+void store_current_address_eeprom(uint8_t eeprom_address, uint8_t slave_address)
+{
+    /* Only store if stored address is different to current address */
+    if (FLASH_0_read_eeprom_byte(eeprom_address) != slave_address)
+	{
+		/* Store current slave address in eeprom */
+		FLASH_0_write_eeprom_byte(eeprom_address, slave_address);
 	}
 }
 
