@@ -527,6 +527,8 @@ int main(void)
 			{
 			    interrupt_timeout_interrupt_fired = 0;
 
+				//Reset pullup on interrupt pin.
+				GPIO1_set_pull_mode(PORT_PULL_UP);
 
 				/* Reset interrupt if we have a communication timeout */
                 resetVl53l0xInterrupt(pDevice, &status);
@@ -968,7 +970,7 @@ static void get_settings_buffer(uint8_t * buffer, bool store_settings)
     uint8_t tmp_buffer[2];
 
     //ignore this if storing settings as it's irrelevant. We do this to save code space, rather than making a special case for it
-    if (!store_settings) buffer[0] = (device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds * 100) & 0xff;
+    if (!store_settings) buffer[0] = (device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds / 1000) & 0xff;
 
     buffer[1] = current_ranging_mode;
     buffer[2] = current_measurement_mode;
