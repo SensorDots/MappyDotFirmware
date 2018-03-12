@@ -18,7 +18,6 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    
 ## Features Under Development
    - Watchdog timer.
-   - MappyDot Mode.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
    - Add VL53L0X Initisation Error Codes.
    - Assign new start address to master and assign master in firmware.
