@@ -95,6 +95,9 @@
 /* I2C Bootloader */
 #define REBOOT_TO_BOOTLOADER                        (0x01)
 
+#define CUSTOM_PROFILE_SETTINGS_SIZE  9
+
+
 uint8_t check_command_size(uint8_t command);
 
 uint8_t is_read_command(uint8_t command);

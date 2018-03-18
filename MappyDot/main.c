@@ -68,10 +68,8 @@
 #define EEPROM_DEVICE_NAME            0x100
 #define EEPROM_CUSTOM_PROFILE_SETINGS 0x120
 #define FILTER_ORDER                  2  //Filter order
-#define SAMPLING_FREQ                 30 //Samples per second
 #define FILTER_FREQUENCY              6  //Hz
 #define SETTINGS_SIZE                 29 // first byte is 0
-#define CUSTOM_PROFILE_SETTINGS_SIZE  9
 #define MIN_DIST                      30 //minimum distance from VL53L0X
 #define MAX_DIST                      4000 //Max sanity distance from VL53L0X
 #define ACCURACY_LIMIT                1200
@@ -243,15 +241,7 @@ int main(void)
 	/* PB6 - PCINT6 (PCMSK1) */
 	PCICR |= (1 << PCIE0);    // set PCIE0 to enable PCMSK0 scan
 	PCMSK0 |= (1 << PCINT6);  // set PCINT6 to trigger an interrupt on state change
-#ifndef DEV_DISABLE
 
-    /* Initialise history buffer */
-    hb_init(&history_buffer,averaging_size,sizeof(uint16_t));
-
-    /* Initialise Filter */
-    bwlpf_init(&low_pass_filter_state,FILTER_ORDER,SAMPLING_FREQ,FILTER_FREQUENCY);
-
-#endif
 
     /* Ranging Interrupt setup */
     /* Interrupt is active low when fired (after ranging complete), rather than high. */
@@ -310,6 +300,16 @@ int main(void)
 		/* Ops we had an init failure */
 		flash_led(5,-1, 1);
 	}
+
+	#ifndef DEV_DISABLE
+
+	/* Initialise history buffer */
+	hb_init(&history_buffer,averaging_size,sizeof(uint16_t));
+
+	/* Initialise Filter */
+	bwlpf_init(&low_pass_filter_state,FILTER_ORDER,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY,0);
+
+	#endif
 
 	measurement_interrupt_fired = false;
 	resetVl53l0xInterrupt(pDevice, &status);
@@ -859,11 +859,16 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             {*/
             current_measurement_mode = arg[0];
 
-			//Set to single ranging mode (stop measurement)
-	        setRangingMode(pDevice, &status, translate_ranging_mode(SET_SINGLE_RANGING_MODE));
+			stopContinuous(pDevice,&status);
+
 			//Change to selected measurement mode
 			translate_measurement_mode(current_measurement_mode, &measurement_profile, custom_profile_settings);
             setRangingMeasurementMode(pDevice, &status, &measurement_profile);
+			#ifndef DEV_DISABLE
+			/* Initialise Filter */
+			bwlpf_init(&low_pass_filter_state,FILTER_ORDER,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY,0);
+			#endif
+
 			//Reset back to original ranging mode
 			setRangingMode(pDevice, &status, translate_ranging_mode(current_ranging_mode));
 

@@ -36,10 +36,13 @@ typedef struct
     double *w0;
     double *w1;
     double *w2;
+	int enabled;
 } filter_state;
 
-void bwlpf_init(filter_state * filter, uint8_t filter_order, uint8_t sampling_frequency, uint8_t half_power_freq);
+void bwlpf_init(filter_state * filter, uint8_t filter_order, uint16_t sampling_frequency, uint8_t half_power_freq, uint8_t full_init);
 uint16_t bwlpf(uint16_t next_sample, filter_state * filter );
+void bwlpf_set_freq(filter_state * filter, uint16_t sampling_frequency);
+
 
 
 #endif /* BWLPF_H_ */
