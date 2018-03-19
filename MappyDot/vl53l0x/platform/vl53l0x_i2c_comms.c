@@ -65,7 +65,8 @@ int VL53L0X_write_byte(uint8_t address, uint8_t index, uint8_t data) {
   uint8_t data_t[1] = {0};
   data_t[0] = data;
   
-  if (i2c_writeReg(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+  //if (i2c_writeReg(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+  if (VL53L0X_write_multi(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
 
   return VL53L0X_ERROR_NONE;
 }
@@ -75,7 +76,8 @@ int VL53L0X_write_word(uint8_t address, uint8_t index, uint16_t data) {
   uint8_t data_t[2] = {0};
   data_t[0] = (data >> 8) & 0xFF;
   data_t[1] =  data       & 0xFF;
-  	if (i2c_writeReg(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+  	//if (i2c_writeReg(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	if (VL53L0X_write_multi(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
 
   return VL53L0X_ERROR_NONE;
 }
@@ -88,7 +90,8 @@ int VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t data) {
   	data_t[2] = (data >>  8) & 0xFF;
   	data_t[3] =  data        & 0xFF;
 
-	if (i2c_writeReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	//if (i2c_writeReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	if (VL53L0X_write_multi(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
 
   return VL53L0X_ERROR_NONE;
 }
@@ -96,7 +99,8 @@ int VL53L0X_write_dword(uint8_t address, uint8_t index, uint32_t data) {
 int VL53L0X_read_byte(uint8_t address, uint8_t index, uint8_t *data) {
 
 	uint8_t data_t[1] = {0};
-	if (i2c_readReg(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	//if (i2c_readReg(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	if (VL53L0X_read_multi(address,index,data_t,1)) return VL53L0X_ERROR_CONTROL_INTERFACE;
 	uint8_t tmp = data_t[0];
 	*data = tmp;
 
@@ -106,8 +110,9 @@ int VL53L0X_read_byte(uint8_t address, uint8_t index, uint8_t *data) {
 int VL53L0X_read_word(uint8_t address, uint8_t index, uint16_t *data) {
 
     uint8_t data_t[2] = {0};
-    if (i2c_readReg(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
-      
+    //if (i2c_readReg(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+    if (VL53L0X_read_multi(address,index,data_t,2)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	  
     uint16_t value;
 
     value  = (uint16_t)data_t[0] << 8; // value high byte
@@ -121,7 +126,8 @@ int VL53L0X_read_word(uint8_t address, uint8_t index, uint16_t *data) {
 int VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *data) {
 
   	uint8_t data_t[4] = {0};
-	if (i2c_readReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	//if (i2c_readReg(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
+	if (VL53L0X_read_multi(address,index,data_t,4)) return VL53L0X_ERROR_CONTROL_INTERFACE;
   	
   	uint32_t value;
 
