@@ -59,7 +59,7 @@
 #warning Some functions are disabled with DEV_DISABLE
 #endif
 
-#define VERSION_STRING                "MD_FW_V1.3"
+#define VERSION_STRING                "MD_FW_V1.4"
 
 #define EEPROM_BOOTLOADER_BYTE        0x02
 #define EEPROM_ADDRESS_BYTE           0x01
@@ -67,7 +67,7 @@
 #define EEPROM_USER_SETTINGS_START    0x60
 #define EEPROM_DEVICE_NAME            0x100
 #define EEPROM_CUSTOM_PROFILE_SETINGS 0x120
-#define FILTER_ORDER                  2  //Filter order
+#define FILTER_ORDER                  10 //Filter order
 #define FILTER_FREQUENCY              6  //Hz
 #define SETTINGS_SIZE                 29 // first byte is 0
 #define MIN_DIST                      30 //minimum distance from VL53L0X
@@ -307,7 +307,7 @@ int main(void)
 	hb_init(&history_buffer,averaging_size,sizeof(uint16_t));
 
 	/* Initialise Filter */
-	bwlpf_init(&low_pass_filter_state,FILTER_ORDER,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY,0);
+	bwlpf_init(&low_pass_filter_state,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY);
 
 	#endif
 
@@ -343,7 +343,9 @@ int main(void)
 		{	
 		    /* Put the microcontroller to sleep
 			   Everything after this is affected by interrupts */
+		    #ifndef DEV_DISABLE
 		    sleep_avr();
+		    #endif
 
 			if (command_to_handle) 
 			{
@@ -866,7 +868,7 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             setRangingMeasurementMode(pDevice, &status, &measurement_profile);
 			#ifndef DEV_DISABLE
 			/* Initialise Filter */
-			bwlpf_init(&low_pass_filter_state,FILTER_ORDER,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY,0);
+			bwlpf_init(&low_pass_filter_state,1000/(device.Data.CurrentParameters.MeasurementTimingBudgetMicroSeconds/1000),FILTER_FREQUENCY);
 			#endif
 
 			//Reset back to original ranging mode

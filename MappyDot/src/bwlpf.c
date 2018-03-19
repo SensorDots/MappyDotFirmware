@@ -40,27 +40,27 @@
 #include <math.h>
 #include "bwlpf.h"
 
-void bwlpf_init(filter_state * filter, uint8_t filter_order, uint16_t sampling_frequency, uint8_t half_power_freq, uint8_t full_init)
+void bwlpf_init(filter_state * filter, uint16_t sampling_frequency, uint8_t half_power_freq)
 {
     //n = filter order 2,4,6,...
     //s = sampling frequency
     //f = half power frequency
 
     int i = 0;
-    filter->n = filter_order/2;
+    filter->n = FILTER_ORDER/2;
     filter->s = sampling_frequency;
     filter->f = half_power_freq;
     filter->a = tan(M_PI*filter->f/filter->s);
     filter->a2 = filter->a*filter->a;
     filter->r = 0;
-	if (full_init) {
+	/*if (full_init) {
 		filter->A = (double *)malloc(filter->n*sizeof(double));
 		filter->d1 = (double *)malloc(filter->n*sizeof(double));
 		filter->d2 = (double *)malloc(filter->n*sizeof(double));
 		filter->w0 = (double *)calloc(filter->n, sizeof(double));
 		filter->w1 = (double *)calloc(filter->n, sizeof(double));
 		filter->w2 = (double *)calloc(filter->n, sizeof(double));
-	}
+	}*/
 
 
     for(i=0; i<filter->n; ++i)
