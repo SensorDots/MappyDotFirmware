@@ -32,6 +32,7 @@
 #define RANGING_MEASUREMENT_MODE                    (0x6d)
 #define SET_CONTINUOUS_RANGING_MODE                 (0x63)
 #define SET_SINGLE_RANGING_MODE                     (0x73)
+#define CHECK_INTERRUPT                             (0x49)
 
 /* Configuration */
 #define FILTERING_ENABLE                            (0x46)

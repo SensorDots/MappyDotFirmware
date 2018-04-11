@@ -60,7 +60,7 @@ uint8_t is_read_command(uint8_t command)
 {
 	if (command == READ_DISTANCE || command == READ_ACCURACY || 
 	    command == READ_ERROR_CODE || command == DEVICE_NAME || 
-		command == READ_CURRENT_SETTINGS || 
+		command == READ_CURRENT_SETTINGS || command == CHECK_INTERRUPT ||
 		command == READ_NONFILTERED_VALUE || command == FIRMWARE_VERSION) return 1;
 
     return 0;

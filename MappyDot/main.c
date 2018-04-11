@@ -67,7 +67,6 @@
 #define EEPROM_USER_SETTINGS_START    0x60
 #define EEPROM_DEVICE_NAME            0x100
 #define EEPROM_CUSTOM_PROFILE_SETINGS 0x120
-#define FILTER_ORDER                  10 //Filter order
 #define FILTER_FREQUENCY              6  //Hz
 #define SETTINGS_SIZE                 29 // first byte is 0
 #define MIN_DIST                      30 //minimum distance from VL53L0X
@@ -119,6 +118,8 @@ volatile uint32_t gpio_threshold               = 300;
 volatile uint8_t averaging_size                = 4;
 volatile uint8_t intersensor_crosstalk_delay   = 0;
 volatile uint8_t intersensor_crosstalk_timeout = 40; //40*ticks
+volatile uint8_t interrupt                     = 0;
+
 
 /* SPAD Calibration */
 uint32_t refSpadCount = 0;
@@ -177,7 +178,12 @@ int main(void)
     if (FLASH_0_read_eeprom_byte(EEPROM_BOOTLOADER_BYTE) != 0x01)
     {
         /* ADDR Init */
+        #ifndef DEBUG
         slave_address = addr_init(is_master);
+        #else
+        slave_address = 0x08;
+        #warning Slave address set to 0x08!!!!!
+        #endif
 
 		/* Try again once more */
 		//if (slave_address == -1) slave_address = addr_init(is_master);
@@ -447,6 +453,8 @@ int main(void)
 					}
 	#endif
 				}
+
+				interrupt = 1;
 			
 				/* Output modes */
 				if (!factory_mode) 
@@ -1075,6 +1083,7 @@ uint8_t main_process_tx_command(uint8_t command, uint8_t * tx_buffer)
     if (command == READ_DISTANCE)
     {
         mm_to_bytes(tx_buffer, filtered_distance);
+		interrupt = 0;
         return 2;
     }
 
