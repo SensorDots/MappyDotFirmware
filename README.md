@@ -14,10 +14,10 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.1 (29/10/2017) - Added IDLE sleep to save ~2-5mA and some small bug fixes. 
    - MD_FW_V1.2 (14/01/2018) - Added custom measurement mode profile setting and saving (new documentation also added to https://sensordots.org/mappydotreg). Cleanup of code and API functions. Tweaks to profile setting code to support the custom measurement profiles.
    - MD_FW_V1.3 (15/01/2018) - Implemented auto address recovery and sped up init routine. Auto address recovery will initialise with the previous auto address if auto addressing fails on startup. This will only recover addresses that were obtained through auto addressing (i.e. not the master address of 0x08). This is useful if some devices reboot during operation due to power supply glitches or disconnection.
+   - MD_FW_V1.3f(27/02/2018) - Fixes a measurement timing budget reporting bug where when reading the settings via I2C, the value is incorrectly reported. Also implements internal pullups for Rev.01c boards which no longer have external pullups on the interrupt and shutdown lines to the vl53l0x sensor. A new release version not created as no new features were added. Boards shipped after this date have this release if they report version 1.3.
    
 ## Features Under Development
    - Watchdog timer.
-   - MappyDot Mode.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
    - Add VL53L0X Initisation Error Codes.
    - Assign new start address to master and assign master in firmware.
