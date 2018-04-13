@@ -444,6 +444,10 @@ int main(void)
 					if (filtering_enabled)
 						filtered_distance = bwlpf(filtered_distance, &low_pass_filter_state);
 
+						/* Ignore filtered distance if over max, this can happen when there is a rapid change from 0 to large value */
+						if (filtered_distance > MAX_DIST)
+						filtered_distance = real_distance;
+
 					/* Averaging happens after filtering */
 					if (averaging_enabled)
 					{
@@ -610,6 +614,8 @@ static void read_default_settings()
  */
 static void reset_vl53l0x_ranging()
 {
+    stopContinuous(pDevice, &status);
+
 	/* Set XSHUT to low to turn off (Shutdown is active low). */
 	XSHUT_set_level(false);
 
@@ -712,7 +718,12 @@ void handle_rx_command(uint8_t command, uint8_t * arg, uint8_t arg_length)
             }
         }
 
-        else if (command == RESTORE_FACTORY_DEFAULTS) read_default_settings();
+        else if (command == RESTORE_FACTORY_DEFAULTS) {
+			read_default_settings();
+
+			reset_vl53l0x_ranging();
+
+		}
 
         else if (command == INTERSENSOR_CROSSTALK_REDUCTION_ENABLE)
         {
