@@ -588,37 +588,37 @@ typedef uint8_t VL53L0X_SequenceStepId;
 #define VL53L0X_FIXPOINT1616TOFIXPOINT97(Value) \
 	(uint16_t)((Value>>9)&0xFFFF)
 #define VL53L0X_FIXPOINT97TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<9)
+	(FixPoint1616_t)((uint32_t)Value<<9)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT88(Value) \
 	(uint16_t)((Value>>8)&0xFFFF)
 #define VL53L0X_FIXPOINT88TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<8)
+	(FixPoint1616_t)((uint32_t)Value<<8)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT412(Value) \
 	(uint16_t)((Value>>4)&0xFFFF)
 #define VL53L0X_FIXPOINT412TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<4)
+	(FixPoint1616_t)((uint32_t)Value<<4)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT313(Value) \
 	(uint16_t)((Value>>3)&0xFFFF)
 #define VL53L0X_FIXPOINT313TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<3)
+	(FixPoint1616_t)((uint32_t)Value<<3)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT08(Value) \
 	(uint8_t)((Value>>8)&0x00FF)
 #define VL53L0X_FIXPOINT08TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<8)
+	(FixPoint1616_t)((uint32_t)Value<<8)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT53(Value) \
 	(uint8_t)((Value>>13)&0x00FF)
 #define VL53L0X_FIXPOINT53TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<13)
+	(FixPoint1616_t)((uint32_t)Value<<13)
 
 #define VL53L0X_FIXPOINT1616TOFIXPOINT102(Value) \
 	(uint16_t)((Value>>14)&0x0FFF)
 #define VL53L0X_FIXPOINT102TOFIXPOINT1616(Value) \
-	(FixPoint1616_t)(Value<<12)
+	(FixPoint1616_t)((uint32_t)Value<<12)
 
 #define VL53L0X_MAKEUINT16(lsb, msb) (uint16_t)((((uint16_t)msb)<<8) + \
 		(uint16_t)lsb)

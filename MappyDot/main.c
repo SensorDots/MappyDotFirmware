@@ -96,18 +96,20 @@ VL53L0X_Error status;
 VL53L0X_Measurement_Mode measurement_profile;
 uint8_t custom_profile_settings[CUSTOM_PROFILE_SETTINGS_SIZE]; //For custom measurement profiles
 
-uint16_t filtered_distance;
-uint16_t real_distance;
-uint8_t error_code;
-uint16_t distance_error;
-uint16_t current_millimeters  = 0;
+uint16_t filtered_distance         = 0;
+uint16_t real_distance             = 0;
+uint8_t error_code                 = 0;
+uint16_t distance_error            = 0;
+uint16_t current_millimeters       = 0;
+uint16_t signal_rate_rtn_mega_cps  = 0;
+uint16_t ambient_rate_rtn_mega_cps = 0;
 
-volatile bool filtering_enabled  = 1;
-volatile bool averaging_enabled  = 0;
-volatile bool factory_mode       = 0;
-volatile bool crosstalk_enabled  = 0;
-volatile bool vl53l0x_powerstate = 0;
-volatile bool is_master          = 0;
+volatile bool filtering_enabled    = 1;
+volatile bool averaging_enabled    = 0;
+volatile bool factory_mode         = 0;
+volatile bool crosstalk_enabled    = 0;
+volatile bool vl53l0x_powerstate   = 0;
+volatile bool is_master            = 0;
 
 volatile uint8_t led_mode                      = LED_PWM_ENABLED;
 volatile uint8_t gpio_mode                     = GPIO_MEASUREMENT_INTERRUPT;
@@ -116,9 +118,10 @@ volatile uint8_t current_measurement_mode      = VL53L0X_DEFAULT;
 volatile uint32_t led_threshold                = 300;
 volatile uint32_t gpio_threshold               = 300;
 volatile uint8_t averaging_size                = 4;
+volatile uint8_t current_average_size          = 0;
 volatile uint8_t intersensor_crosstalk_delay   = 0;
 volatile uint8_t intersensor_crosstalk_timeout = 40; //40*ticks
-volatile uint8_t interrupt                     = 0;
+volatile uint8_t read_interrupt                     = 0;
 
 
 /* SPAD Calibration */
@@ -133,11 +136,12 @@ FixPoint1616_t xTalkCompensationRateMegaCps = 0;
 
 /* Temperature Calibrate */
 uint8_t vhvSettings = 0;
-uint8_t phaseCal = 0;
+uint8_t phaseCal    = 0;
 
-int8_t led_pulse = 0;
-uint8_t led_pulse_dir = 0;
+int8_t led_pulse           = 0;
+uint8_t led_pulse_dir      = 0;
 uint16_t led_pulse_timeout = 0;
+uint8_t ignore_next_filter = 0;
 
 /* Command handler */
 bool command_to_handle;
@@ -318,7 +322,6 @@ int main(void)
 	#endif
 
 	measurement_interrupt_fired = false;
-	resetVl53l0xInterrupt(pDevice, &status);
 
 	int32_t crosstalkTimeout = intersensor_crosstalk_timeout * 1000;
 
@@ -338,6 +341,10 @@ int main(void)
 	if (current_ranging_mode == SET_CONTINUOUS_RANGING_MODE) TIMER_2_init();
 	#endif
 
+	//Reset pullup on interrupt pin.
+	GPIO1_set_pull_mode(PORT_PULL_UP);
+	
+	resetVl53l0xInterrupt(pDevice, &status);
 
     /* Main code */
     while (1)
@@ -419,11 +426,14 @@ int main(void)
 				if (measure.RangeStatus != 4)
 				{
 					current_millimeters = measure.RangeMilliMeter;
-					distance_error = (uint32_t)measure.Sigma >> 16;
+					
 				} else {
 					current_millimeters = 0;
-					distance_error = 0;
-				}			
+				}		
+
+				distance_error = (uint32_t)measure.Sigma >> 16;	
+				signal_rate_rtn_mega_cps = measure.SignalRateRtnMegaCps >> 16;
+				ambient_rate_rtn_mega_cps = measure.AmbientRateRtnMegaCps >> 16;
 
 				/* 0 is invalid measurement */
 
@@ -436,29 +446,48 @@ int main(void)
 				real_distance = current_millimeters;
 				filtered_distance = real_distance;
 
+#ifndef DEV_DISABLE
+				/* Push current measurement into ring buffer for averaging */
+				hb_push_back(&history_buffer, &filtered_distance);
+
 				if (filtered_distance != 0)
 				{
-                
-	#ifndef DEV_DISABLE
-
 					if (filtering_enabled)
+					{
 						filtered_distance = bwlpf(filtered_distance, &low_pass_filter_state);
 
 						/* Ignore filtered distance if over max, this can happen when there is a rapid change from 0 to large value */
-						if (filtered_distance > MAX_DIST)
-						filtered_distance = real_distance;
+						if (ignore_next_filter > 0)
+						{
+							filtered_distance = real_distance;
+							ignore_next_filter--;
+						}
+
+						if (filtered_distance > MAX_DIST && !ignore_next_filter)
+						{
+							filtered_distance = real_distance;
+							ignore_next_filter = FILTER_ORDER * 2;
+						}
+					}
 
 					/* Averaging happens after filtering */
 					if (averaging_enabled)
 					{
-						//Push current measurement into ring buffer for filtering
-						hb_push_back(&history_buffer, &filtered_distance);
-						filtered_distance = avg(history_buffer.buffer,averaging_size);
+						/* Wait for history buffer to fill */
+						if (current_average_size < averaging_size)
+						{
+							filtered_distance = real_distance;
+							current_average_size++;
+						}
+						else
+						{
+							filtered_distance = avg(history_buffer.buffer,averaging_size);
+						}
 					}
-	#endif
 				}
+#endif
 
-				interrupt = 1;
+				read_interrupt = 1;
 			
 				/* Output modes */
 				if (!factory_mode) 
@@ -1094,7 +1123,7 @@ uint8_t main_process_tx_command(uint8_t command, uint8_t * tx_buffer)
     if (command == READ_DISTANCE)
     {
         mm_to_bytes(tx_buffer, filtered_distance);
-		interrupt = 0;
+		read_interrupt = 0;
         return 2;
     }
 
@@ -1109,6 +1138,12 @@ uint8_t main_process_tx_command(uint8_t command, uint8_t * tx_buffer)
         tx_buffer[0] = error_code;
         return 1;
     }
+
+	else if (command == CHECK_INTERRUPT)
+	{
+		tx_buffer[0] = read_interrupt;
+		return 1;
+	}
 
     else if (command == DEVICE_NAME)
     {
@@ -1127,6 +1162,18 @@ uint8_t main_process_tx_command(uint8_t command, uint8_t * tx_buffer)
         mm_to_bytes(tx_buffer, real_distance);
         return 2;
     }
+
+	else if (command == AMBIENT_RATE_RETURN)
+	{
+		mm_to_bytes(tx_buffer, ambient_rate_rtn_mega_cps);
+		return 2;
+	}
+
+	else if (command == SIGNAL_RATE_RETURN)
+	{
+		mm_to_bytes(tx_buffer, signal_rate_rtn_mega_cps);
+		return 2;
+	}
 
     else if (command == FIRMWARE_VERSION)
     {
