@@ -453,11 +453,10 @@ VL53L0X_API VL53L0X_Error VL53L0X_GetTuningSettingBuffer(VL53L0X_DEV Dev,
  * @note This function Access to the device
  *
  * @param   Dev                   Device Handle
- * @param   alt_spad_init         Use alternate SPAD init function
  * @return  VL53L0X_ERROR_NONE     Success
  * @return  "Other error code"    See ::VL53L0X_Error
  */
-VL53L0X_API VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev, uint8_t alt_spad_init);
+VL53L0X_API VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev);
 
 
 /**

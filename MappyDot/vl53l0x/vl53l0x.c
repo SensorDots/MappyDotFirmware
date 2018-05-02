@@ -76,26 +76,20 @@ bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t rangin
 	/* Note: Ref Spad should happen before Refcalibration. */
 
 
-	if (refSpadCount != 0 && ApertureSpads != 0)
+	if (*status == VL53L0X_ERROR_NONE && refSpadCount != 0)
 	{
+	    *status = VL53L0X_StaticInit( device );
+
 	    VL53L0X_SetReferenceSpads(device,refSpadCount,ApertureSpads);
-		*status = VL53L0X_StaticInit( device, true );
+		
 		spad_has_calibration = true;
 	}
 	if( (*status == VL53L0X_ERROR_NONE && !spad_has_calibration) || *status == VL53L0X_ERROR_REF_SPAD_INIT )
 	{
 		/* Fallback SPAD Init */
-		/* Only happens when no calibration has been done. Can happen
-		if SPADs fail (very very rare; heat or shock damage can cause this) an a recalibration is required.
-		If the calibration has not been performed (using
-		VL53L0X_PerformRefSpadManagement()), or if the Host has not programmed the
-		number and type of SPADs (using VL53L0X_SetReferenceSpads()),
-		VL53L0X_GetReferenceSpads() will return the number and type of reference SPADs
-		programmed into the device NVM. */
-		*status = VL53L0X_StaticInit( device, false );
+		*status = VL53L0X_StaticInit( device );
 
-		*status = VL53L0X_PerformRefSpadManagement(device, &refSpadCount, &ApertureSpads);
-		    
+		*status = VL53L0X_PerformRefSpadManagement(device, &refSpadCount, &ApertureSpads);	    
 	}
 
 	/* Temperature Cal on Startup*/
@@ -103,13 +97,13 @@ bool init_ranging(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint8_t rangin
 
 	/* Set Calibration Values */
 
-	if (spad_has_calibration && *status == VL53L0X_ERROR_NONE && offsetMicroMeter != 0)
+	if (*status == VL53L0X_ERROR_NONE && offsetMicroMeter != 0)
 	{
 		/* Set Offset calibration */
 		*status = VL53L0X_SetOffsetCalibrationDataMicroMeter(device,offsetMicroMeter);
 	}
 
-	if (spad_has_calibration && *status == VL53L0X_ERROR_NONE && offsetMicroMeter != 0)
+	if (*status == VL53L0X_ERROR_NONE && xTalkCompensationRateMegaCps != 0) //This is zero by default as we aren't calibrating for it.
 	{
 		/* Set Cross-talk correction */
 		*status = VL53L0X_SetXTalkCompensationRateMegaCps(device,xTalkCompensationRateMegaCps);
@@ -240,7 +234,7 @@ uint8_t calibrateSPAD(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint32_t *
  */
 uint8_t calibrateDistanceOffset(VL53L0X_Dev_t * device, VL53L0X_Error * status, uint16_t referenceDistanceMM, int32_t * pOffsetMicroMeter)
 {
-    if (VL53L0X_PerformOffsetCalibration(device,referenceDistanceMM, pOffsetMicroMeter) != VL53L0X_ERROR_NONE) return 1;
+    if (VL53L0X_PerformOffsetCalibration(device,(uint32_t)referenceDistanceMM << 16, pOffsetMicroMeter) != VL53L0X_ERROR_NONE) return 1;
 	return 0;
 }
 
@@ -257,7 +251,7 @@ uint8_t calibrateDistanceOffset(VL53L0X_Dev_t * device, VL53L0X_Error * status, 
  */
 uint8_t calibrateCrosstalk(VL53L0X_Dev_t * device, VL53L0X_Error * status,uint16_t referenceDistanceMM, FixPoint1616_t *pXTalkCompensationRateMegaCps)
 {
-	if (VL53L0X_PerformXTalkCalibration(device,referenceDistanceMM, pXTalkCompensationRateMegaCps) != VL53L0X_ERROR_NONE) return 1;
+	if (VL53L0X_PerformXTalkCalibration(device,(uint32_t)referenceDistanceMM << 16, pXTalkCompensationRateMegaCps) != VL53L0X_ERROR_NONE) return 1;
 	return 0;
 }
 

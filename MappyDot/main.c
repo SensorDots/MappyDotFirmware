@@ -59,7 +59,7 @@
 #warning Some functions are disabled with DEV_DISABLE
 #endif
 
-#define VERSION_STRING                "MD_FW_V1.4"
+#define VERSION_STRING                "MD_FW_V1.5"
 
 #define EEPROM_BOOTLOADER_BYTE        0x02
 #define EEPROM_ADDRESS_BYTE           0x01

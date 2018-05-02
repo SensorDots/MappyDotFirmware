@@ -221,7 +221,7 @@ VL53L0X_Error VL53L0X_SetPowerMode(VL53L0X_DEV Dev, VL53L0X_PowerModes PowerMode
 		/* VL53L0X_POWERMODE_IDLE_LEVEL1 */
 		Status = VL53L0X_WrByte(Dev, 0x80, 0x00);
 		if (Status == VL53L0X_ERROR_NONE)
-			Status = VL53L0X_StaticInit(Dev, 1);
+			Status = VL53L0X_StaticInit(Dev);
 
 		if (Status == VL53L0X_ERROR_NONE)
 			PALDevDataSet(Dev, PowerMode,
@@ -554,7 +554,7 @@ VL53L0X_Error VL53L0X_GetTuningSettingBuffer(VL53L0X_DEV Dev,
 	return Status;
 }
 
-VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev, uint8_t alt_spad_init)
+VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	VL53L0X_DeviceParameters_t CurrentParameters = {0};
@@ -573,22 +573,20 @@ VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev, uint8_t alt_spad_init)
 
 	Status = VL53L0X_get_info_from_device(Dev, 1);
 
-	if (!alt_spad_init) {
-		/* set the ref spad from NVM */
-		count	= (uint32_t)VL53L0X_GETDEVICESPECIFICPARAMETER(Dev,
-			ReferenceSpadCount);
-		ApertureSpads = VL53L0X_GETDEVICESPECIFICPARAMETER(Dev,
-			ReferenceSpadType);
+	/* set the ref spad from NVM */
+	count	= (uint32_t)VL53L0X_GETDEVICESPECIFICPARAMETER(Dev,
+		ReferenceSpadCount);
+	ApertureSpads = VL53L0X_GETDEVICESPECIFICPARAMETER(Dev,
+		ReferenceSpadType);
 
-		/* NVM value invalid */
-		if ((ApertureSpads > 1) ||
-			((ApertureSpads == 1) && (count > 32)) ||
-			((ApertureSpads == 0) && (count > 12)))
-			Status = VL53L0X_perform_ref_spad_management(Dev, &refSpadCount,
-				&isApertureSpads);
-		else
-			Status = VL53L0X_set_reference_spads(Dev, count, ApertureSpads);
-    }
+	/* NVM value invalid */
+	if ((ApertureSpads > 1) ||
+		((ApertureSpads == 1) && (count > 32)) ||
+		((ApertureSpads == 0) && (count > 12)))
+		Status = VL53L0X_perform_ref_spad_management(Dev, &refSpadCount,
+			&isApertureSpads);
+	else
+		Status = VL53L0X_set_reference_spads(Dev, count, ApertureSpads);
 
 	/* Initialize tuning settings buffer to prevent compiler warning. */
 	pTuningSettingBuffer = DefaultTuningSettings;
