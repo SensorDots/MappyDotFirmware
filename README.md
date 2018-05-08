@@ -3,8 +3,7 @@
 Firmware sources for use with the MappyDot - https://sensordots.org/mappydot
 The firmware is developed for use and compilation with Atmel Studio.
 
-![MappyDot](https://sensordots.org/sites/default/files/inline-images/mappydot.jpg)
-{: height="100px" width="100px"}
+<img src="https://sensordots.org/sites/default/files/inline-images/mappydot.jpg" width="200" />
 
 ## Compile Size
 Please note, the Debug release of this firmware will not fit with the bootloader. When developing and debugging you will need to disable some functions or erase the bootloader and BOOTRST fuses. 
