@@ -21,7 +21,6 @@ MappyDots can be queried for their firmware version with the I2C command N (0x4E
    - MD_FW_V1.5 (03/05/2018) - Fix major issue with the calibration routine handlers. The previous calibration routines would not load the calibration values on startup correctly. Customers wishing to use offset calibration and crosstalk calibration must upgrade to this firmware version.
    
 ## Features Under Development
-   - Watchdog timer.
    - Inter-device crosstalk grouping. Will allow you to assign groups to devices to prevent crosstalk.
-   - Add VL53L0X Initisation Error Codes.
    - Assign new start address to master and assign master in firmware.
+   - Intersensor synchronisation. Will syncronise measurements to master.
